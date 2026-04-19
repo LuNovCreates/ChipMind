@@ -1,0 +1,35 @@
+{
+  "name": "ChipMind",
+  "short_name": "ChipMind",
+  "description": "Entraînement calcul mental pour futurs croupiers de casino",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a2e1a",
+  "theme_color": "#0a2e1a",
+  "lang": "fr",
+  "categories": ["education", "games"],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tables Croupier",
+      "short_name": "Tables",
+      "url": "./modules/module1.html",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

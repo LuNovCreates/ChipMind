@@ -1,0 +1,144 @@
+/* ═══════════════════════════════════════════════════════════════
+   ChipMind — CSS Variables Globales
+   Importé par tous les modules via <link rel="stylesheet">
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Couleurs principales ── */
+  --felt:           #0a2e1a;
+  --felt-light:     #0f3d22;
+  --felt-mid:       #0d3420;
+  --felt-card:      #102e1d;
+  --felt-deep:      #071f12;
+
+  /* ── Or ── */
+  --gold:           #c9a84c;
+  --gold-light:     #e8cc7a;
+  --gold-dark:      #9a7a2e;
+  --gold-pale:      #f2e0a0;
+  --gold-glow:      rgba(201,168,76,0.35);
+  --gold-subtle:    rgba(201,168,76,0.12);
+  --gold-border:    rgba(201,168,76,0.25);
+
+  /* ── Rouge casino ── */
+  --red:            #c0392b;
+  --red-light:      #e74c3c;
+  --red-glow:       rgba(192,57,43,0.4);
+
+  /* ── Vert succès ── */
+  --green:          #27ae60;
+  --green-light:    #2ecc71;
+  --green-glow:     rgba(39,174,96,0.4);
+
+  /* ── Ivoire / texte ── */
+  --ivory:          #f5f0e8;
+  --ivory-dim:      rgba(245,240,232,0.6);
+  --ivory-faint:    rgba(245,240,232,0.12);
+  --ivory-ghost:    rgba(245,240,232,0.05);
+
+  /* ── Ombres ── */
+  --shadow-card:    0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-gold:    0 0 20px var(--gold-glow), 0 0 40px rgba(201,168,76,0.12);
+  --shadow-red:     0 0 20px var(--red-glow);
+  --shadow-green:   0 0 20px var(--green-glow);
+
+  /* ── Typographie ── */
+  --font-serif:     'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-mono:      'Roboto Mono', 'Courier New', monospace;
+  --font-elegant:   'Cormorant Garamond', 'Palatino Linotype', serif;
+
+  /* ── Géométrie ── */
+  --radius:         14px;
+  --radius-sm:      8px;
+  --radius-lg:      20px;
+  --radius-pill:    99px;
+
+  /* ── Transitions ── */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:       cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Espacements ── */
+  --page-pad:       20px;
+  --nav-height:     64px;
+
+  /* ── Niveaux de difficulté ── */
+  --color-beginner:     #4caf8c;
+  --color-intermediate: var(--gold);
+  --color-expert:       var(--red);
+}
+
+/* ── Reset minimal ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--felt);
+  color: var(--ivory);
+  font-family: var(--font-mono);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Utilitaires communs ── */
+.text-gold   { color: var(--gold); }
+.text-red    { color: var(--red-light); }
+.text-green  { color: var(--green-light); }
+.text-dim    { color: var(--ivory-dim); }
+
+.hidden { display: none !important; }
+
+/* ── Bouton générique ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  transition: all 0.2s var(--ease-spring);
+}
+.btn:active { transform: scale(0.96); }
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+  color: var(--felt-deep);
+  box-shadow: 0 4px 16px var(--gold-glow);
+}
+.btn-gold:hover {
+  box-shadow: var(--shadow-gold);
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  background: var(--ivory-faint);
+  border: 1px solid var(--gold-border);
+  color: var(--gold);
+  backdrop-filter: blur(8px);
+}
+.btn-ghost:hover {
+  background: var(--gold-subtle);
+  border-color: var(--gold);
+}
+
+.btn-danger {
+  background: rgba(192,57,43,0.15);
+  border: 1px solid rgba(192,57,43,0.3);
+  color: var(--red-light);
+}

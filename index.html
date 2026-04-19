@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a2e1a" />
+  <meta name="description" content="ChipMind – Entraînement calcul mental croupier" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <title>ChipMind</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Roboto+Mono:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/variables.css" />
+
+  <style>
+    .bg-felt { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .bg-felt::before {
+      content: ''; position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg,   transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px),
+        repeating-linear-gradient(90deg,  transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+    }
+    .bg-roulette { position: absolute; width: 900px; height: 900px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid rgba(201,168,76,0.05); animation: rouletteSpin 90s linear infinite; }
+    .bg-roulette::before { content: ''; position: absolute; inset: 50px; border-radius: 50%; border: 1px solid rgba(201,168,76,0.04); }
+    .bg-roulette::after  { content: ''; position: absolute; inset: 100px; border-radius: 50%; border: 1px solid rgba(201,168,76,0.03); }
+    .roulette-spoke { position: absolute; width: 1px; height: 450px; background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.07), transparent); top: 0; left: 50%; transform-origin: bottom center; }
+    @keyframes rouletteSpin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+    .float-suit { position: absolute; opacity: 0; animation: floatUp 12s ease-in-out infinite; color: var(--gold); user-select: none; }
+    @keyframes floatUp { 0%{opacity:0;transform:translateY(0) rotate(0deg)} 10%{opacity:0.10} 90%{opacity:0.05} 100%{opacity:0;transform:translateY(-115vh) rotate(200deg)} }
+
+    .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 calc(var(--nav-height) + 20px + env(safe-area-inset-bottom, 0px)); }
+
+    /* HEADER */
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 52px 24px 20px; }
+    .logo-eyebrow { font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); opacity: 0.8; margin-bottom: 2px; }
+    .logo-title { font-family: var(--font-serif); font-size: 2.2rem; font-weight: 900; line-height: 1; background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 12px var(--gold-glow)); }
+    .logo-sub { font-family: var(--font-elegant); font-style: italic; font-size: 0.73rem; color: var(--ivory-dim); margin-top: 2px; letter-spacing: 0.04em; }
+    .header-icon { font-size: 2.1rem; animation: chipFloat 3.2s ease-in-out infinite; filter: drop-shadow(0 0 8px var(--gold-glow)); }
+    @keyframes chipFloat { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-6px) rotate(5deg); } }
+    .btn-settings { background: var(--ivory-faint); border: 1px solid var(--gold-border); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px); }
+    .btn-settings:hover { background: rgba(201,168,76,0.12); border-color: var(--gold); box-shadow: var(--shadow-gold); }
+    .btn-settings svg { width: 18px; height: 18px; stroke: var(--gold); }
+
+    /* BANNIÈRE */
+    .progress-banner { margin: 0 20px 24px; background: linear-gradient(135deg, rgba(201,168,76,0.11) 0%, rgba(201,168,76,0.05) 50%, rgba(201,168,76,0.09) 100%); border: 1px solid var(--gold-border); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; animation: fadeDown 0.6s var(--ease-out) both; }
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+    .progress-banner::before { content: '♦'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 5rem; color: var(--gold); opacity: 0.04; line-height: 1; }
+    .banner-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .banner-label { font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); opacity: 0.7; }
+    .banner-level { display: flex; align-items: center; gap: 6px; background: rgba(201,168,76,0.08); border: 1px solid var(--gold-border); border-radius: var(--radius-pill); padding: 3px 10px; }
+    .banner-level span { font-family: var(--font-mono); font-size: 0.58rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.12em; }
+    .level-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulseDot 2s ease-in-out infinite; }
+    @keyframes pulseDot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.75); } }
+    .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .stat-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .stat-value { font-family: var(--font-serif); font-size: 1.55rem; font-weight: 700; color: var(--gold-light); line-height: 1; filter: drop-shadow(0 0 5px var(--gold-glow)); }
+    .stat-label { font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ivory-dim); }
+    .stat-divider { width: 1px; background: rgba(201,168,76,0.18); align-self: stretch; margin: 4px 0; }
+    .progress-bar-wrap { margin-top: 16px; }
+    .progress-bar-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .progress-bar-meta span { font-family: var(--font-mono); font-size: 0.53rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ivory-dim); }
+    .progress-bar-meta .pct { color: var(--gold); }
+    .progress-track { height: 4px; background: rgba(255,255,255,0.07); border-radius: var(--radius-pill); overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light)); box-shadow: 0 0 8px var(--gold-glow); transition: width 1.5s var(--ease-out); }
+
+    /* SECTION HEADER */
+    .section-header { padding: 0 24px 14px; display: flex; align-items: center; gap: 10px; }
+    .section-title { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; color: var(--ivory); letter-spacing: 0.02em; }
+    .section-line { flex: 1; height: 1px; background: linear-gradient(to right, rgba(201,168,76,0.28), transparent); }
+    .section-suit { font-size: 0.72rem; color: var(--gold); opacity: 0.45; }
+
+    /* GRILLE MODULES */
+    .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 20px; }
+    .module-card { background: linear-gradient(145deg, var(--felt-card) 0%, var(--felt-mid) 100%); border: 1px solid rgba(201,168,76,0.13); border-radius: var(--radius); padding: 18px 14px 14px; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.25s var(--ease-spring), border-color 0.2s, box-shadow 0.2s; box-shadow: var(--shadow-card); animation: cardReveal 0.5s var(--ease-out) both; }
+    /* Modules actifs (débloqués, pas à venir) : fond vert feutrine plus lumineux, comme les panneaux */
+    .module-card.active-mod { background: linear-gradient(145deg, var(--felt-light) 0%, #0d3822 100%); border-color: rgba(201,168,76,0.22); }
+    .module-card:nth-child(1)  { animation-delay: 0.04s; }
+    .module-card:nth-child(2)  { animation-delay: 0.09s; }
+    .module-card:nth-child(3)  { animation-delay: 0.14s; }
+    .module-card:nth-child(4)  { animation-delay: 0.19s; }
+    .module-card:nth-child(5)  { animation-delay: 0.24s; }
+    .module-card:nth-child(6)  { animation-delay: 0.29s; }
+    .module-card:nth-child(7)  { animation-delay: 0.34s; }
+    .module-card:nth-child(8)  { animation-delay: 0.39s; }
+    .module-card:nth-child(9)  { animation-delay: 0.44s; }
+    .module-card:nth-child(10) { animation-delay: 0.49s; }
+    @keyframes cardReveal { from { opacity: 0; transform: translateY(18px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .module-card:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(201,168,76,0.45); box-shadow: var(--shadow-card), 0 0 22px rgba(201,168,76,0.12); }
+    .module-card:active { transform: scale(0.97); }
+    .module-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 38%; background: linear-gradient(to bottom, rgba(255,255,255,0.035), transparent); border-radius: var(--radius) var(--radius) 0 0; pointer-events: none; }
+    .module-card::after { content: attr(data-suit); position: absolute; bottom: 10px; right: 12px; font-size: 1.8rem; opacity: 0.05; line-height: 1; transition: opacity 0.2s; }
+    .module-card:hover::after { opacity: 0.11; }
+    .module-card.wide { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 18px 20px; }
+    .module-card.wide .module-icon { font-size: 2.3rem; margin-bottom: 0; flex-shrink: 0; }
+    .module-card.wide .module-info { flex: 1; }
+    .module-card.wide .module-name { font-size: 0.92rem; margin-bottom: 3px; }
+    .module-card.locked { cursor: default; }
+    .module-card.locked:hover { transform: none; border-color: rgba(201,168,76,0.13); box-shadow: var(--shadow-card); }
+    .lock-overlay { position: absolute; inset: 0; background: rgba(7,31,18,0.55); backdrop-filter: blur(1.5px); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+    .module-card.locked:hover .lock-overlay { opacity: 1; }
+
+    /* TODO: supprimer ce bloc quand tous les modules sont prêts */
+    .module-card.coming-soon { cursor: default; opacity: 0.52; filter: grayscale(0.4); }
+    .module-card.coming-soon:hover { transform: none; border-color: rgba(201,168,76,0.13); box-shadow: var(--shadow-card); }
+    .module-card:not(.locked):not(.coming-soon):hover .module-icon { transform: scale(1.15) rotate(-4deg); }
+    .coming-soon-overlay {
+      position: absolute; inset: 0; border-radius: var(--radius);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      pointer-events: none; opacity: 0;
+      background: rgba(7,31,18,0.75); backdrop-filter: blur(2px); transition: opacity 0.22s;
+    }
+    .module-card.coming-soon:hover .coming-soon-overlay { opacity: 1; }
+    .cs-label { font-family: var(--font-serif); font-size: 0.9rem; font-weight: 700; color: var(--gold-light); }
+    .cs-sub { font-family: var(--font-mono); font-size: 0.46rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ivory-dim); }
+    .badge-cs {
+      position: absolute; top: 7px; left: 7px;
+      font-family: var(--font-mono); font-size: 0.42rem; text-transform: uppercase; letter-spacing: 0.1em;
+      background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.22); color: var(--gold); opacity: 0.75;
+      padding: 2px 7px; border-radius: var(--radius-pill); pointer-events: none;
+    }
+
+    .module-num { position: absolute; top: 10px; right: 10px; font-family: var(--font-mono); font-size: 0.48rem; color: var(--gold); opacity: 0.45; letter-spacing: 0.08em; }
+    .module-icon { font-size: 2rem; margin-bottom: 9px; display: block; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4)); transition: transform 0.25s var(--ease-spring); }
+    .module-name { font-family: var(--font-serif); font-size: 0.81rem; font-weight: 700; color: var(--ivory); line-height: 1.3; margin-bottom: 5px; letter-spacing: 0.01em; }
+    .module-sub { font-family: var(--font-mono); font-size: 0.49rem; color: var(--ivory-dim); text-transform: uppercase; letter-spacing: 0.11em; margin-bottom: 9px; }
+    .module-stars { display: flex; gap: 3px; align-items: center; }
+    .star { font-size: 0.68rem; transition: transform 0.15s; }
+    .star.filled  { color: var(--gold); filter: drop-shadow(0 0 4px var(--gold-glow)); }
+    .star.empty   { color: rgba(201,168,76,0.18); }
+    .module-card:hover .star.filled { transform: scale(1.2); }
+    .module-prog-bar { margin-top: 8px; height: 2px; background: rgba(255,255,255,0.07); border-radius: var(--radius-pill); overflow: hidden; }
+    .module-prog-fill { height: 100%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--gold-dark), var(--gold)); box-shadow: 0 0 4px var(--gold-glow); }
+
+    /* BOTTOM NAV */
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: linear-gradient(to top, rgba(7,31,18,0.99), rgba(10,46,26,0.94)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(201,168,76,0.13); display: flex; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; cursor: pointer; transition: all 0.2s; position: relative; }
+    .nav-item.active .nav-icon, .nav-item.active .nav-label { color: var(--gold); }
+    .nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2px; background: var(--gold); border-radius: var(--radius-pill); box-shadow: 0 0 8px var(--gold-glow); }
+    .nav-icon { font-size: 1.25rem; color: var(--ivory-dim); transition: all 0.2s; }
+    .nav-item:hover .nav-icon { color: var(--gold-light); transform: scale(1.1); }
+    .nav-label { font-family: var(--font-mono); font-size: 0.46rem; text-transform: uppercase; letter-spacing: 0.11em; color: var(--ivory-dim); }
+
+    /* PANNEAUX */
+    .panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .panel-overlay.open { opacity: 1; pointer-events: all; }
+    .panel-sheet { width: 100%; max-width: 480px; margin: 0 auto; background: var(--felt-light); border: 1px solid rgba(201,168,76,0.18); border-radius: 22px 22px 0 0; transform: translateY(100%); transition: transform 0.4s var(--ease-out); max-height: 80dvh; overflow-y: auto; }
+    .panel-overlay.open .panel-sheet { transform: translateY(0); }
+    .panel-inner { padding: 8px 24px calc(40px + env(safe-area-inset-bottom, 0px)); }
+    .panel-handle { width: 40px; height: 4px; background: rgba(201,168,76,0.25); border-radius: var(--radius-pill); margin: 12px auto 20px; }
+    .panel-title { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--gold-light); margin-bottom: 20px; }
+
+    /* PARAMÈTRES */
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--ivory-faint); }
+    .setting-info { display: flex; flex-direction: column; gap: 2px; }
+    .setting-name { font-family: var(--font-mono); font-size: 0.77rem; color: var(--ivory); }
+    .setting-desc { font-family: var(--font-mono); font-size: 0.52rem; color: var(--ivory-dim); letter-spacing: 0.05em; }
+
+    /* ── Slider volume ── */
+    .vol-row {
+      display: flex; align-items: center; gap: 0;
+      padding: 14px 0; border-bottom: 1px solid var(--ivory-faint);
+    }
+    .vol-left { display: flex; flex-direction: column; gap: 3px; min-width: 110px; }
+    .vol-name { font-family: var(--font-mono); font-size: 0.77rem; color: var(--ivory); }
+    .vol-desc { font-family: var(--font-mono); font-size: 0.52rem; color: var(--ivory-dim); letter-spacing: 0.05em; }
+    .vol-controls { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .vol-mute-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--ivory-faint); border: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-size: 1rem;
+      transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .vol-mute-btn:hover { background: var(--gold-subtle); border-color: var(--gold); }
+    .vol-mute-btn.muted { opacity: 0.45; }
+    .vol-slider {
+      --fill: 50%;
+      flex: 1;
+      -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 99px;
+      background: linear-gradient(to right, var(--gold) var(--fill), rgba(255,255,255,0.1) var(--fill));
+      cursor: pointer; outline: none;
+    }
+    .vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--gold); cursor: pointer;
+      box-shadow: 0 0 6px var(--gold-glow);
+    }
+    .vol-slider.muted {
+      background: rgba(255,255,255,0.1);
+    }
+    .vol-slider.muted::-webkit-slider-thumb { background: rgba(255,255,255,0.25); box-shadow: none; }
+    .vol-pct {
+      font-family: var(--font-mono); font-size: 0.55rem;
+      color: var(--gold); min-width: 28px; text-align: right; letter-spacing: 0.04em;
+    }
+    .vol-pct.muted { color: var(--ivory-dim); }
+    .toggle { width: 44px; height: 24px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); position: relative; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
+    .toggle.on { background: var(--gold); }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform 0.3s var(--ease-spring); }
+    .toggle.on::after { transform: translateX(20px); }
+    .level-selector { display: flex; gap: 6px; }
+    .level-btn { padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--gold-border); background: transparent; color: var(--ivory-dim); font-family: var(--font-mono); font-size: 0.53rem; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; }
+    .level-btn.active { background: var(--gold); border-color: var(--gold); color: var(--felt); font-weight: 600; }
+
+    /* SUCCÈS */
+    .ach-summary { display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px; }
+    .ach-count { font-family: var(--font-serif); font-size: 2rem; color: var(--gold); font-weight: 700; }
+    .ach-count-label { font-family: var(--font-mono); font-size: 0.55rem; color: var(--ivory-dim); text-transform: uppercase; letter-spacing: 0.12em; }
+    .ach-progress-track { height: 3px; background: rgba(255,255,255,0.07); border-radius: var(--radius-pill); overflow: hidden; margin-bottom: 22px; }
+    .ach-progress-fill { height: 100%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--gold-dark), var(--gold-light)); box-shadow: 0 0 6px var(--gold-glow); transition: width 1s var(--ease-out); }
+    .ach-group { margin-bottom: 20px; }
+    .ach-group-title { font-family: var(--font-mono); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 10px; }
+    .ach-list { display: flex; flex-direction: column; gap: 8px; }
+    .ach-badge { display: flex; align-items: center; gap: 12px; background: var(--ivory-ghost); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 10px 14px; transition: all 0.2s; }
+    .ach-badge.unlocked { background: rgba(201,168,76,0.05); }
+    .ach-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .ach-info { flex: 1; }
+    .ach-name { font-family: var(--font-serif); font-size: 0.82rem; font-weight: 700; color: var(--ivory); margin-bottom: 2px; }
+    .ach-badge.locked .ach-name { color: var(--ivory-dim); }
+    .ach-desc { font-family: var(--font-mono); font-size: 0.52rem; color: var(--ivory-dim); letter-spacing: 0.04em; }
+    .ach-date { font-family: var(--font-mono); font-size: 0.47rem; color: var(--gold); opacity: 0.7; margin-top: 2px; letter-spacing: 0.06em; }
+    .ach-section-header { font-family: var(--font-mono); font-size: 0.52rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--ivory-dim); opacity: 0.6; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--ivory-faint); }
+
+    /* HISTORIQUE */
+    .history-empty { text-align: center; padding: 40px 0; font-family: var(--font-elegant); font-style: italic; font-size: 1rem; color: var(--ivory-dim); }
+    .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ivory-faint); }
+    .history-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .history-info { flex: 1; }
+    .history-name { font-family: var(--font-serif); font-size: 0.8rem; font-weight: 700; color: var(--ivory); }
+    .history-meta { font-family: var(--font-mono); font-size: 0.5rem; color: var(--ivory-dim); letter-spacing: 0.06em; margin-top: 2px; }
+    .history-stars { display: flex; gap: 2px; flex-shrink: 0; }
+
+    @media (max-width: 360px) {
+      .logo-title    { font-size: 1.85rem; }
+      .modules-grid  { gap: 10px; padding: 0 14px; }
+      .module-card   { padding: 14px 11px 12px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="bg-felt">
+  <div class="bg-roulette" id="bgRoulette"></div>
+</div>
+
+<main class="app">
+
+  <header class="header">
+    <div>
+      <div class="logo-eyebrow">Casino Training</div>
+      <div class="logo-title">ChipMind</div>
+      <div class="logo-sub">L'école du croupier d'élite</div>
+    </div>
+    <span class="header-icon">🎰</span>
+    <button class="btn-settings" id="btnSettings" aria-label="Paramètres">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <section class="progress-banner">
+    <div class="banner-top">
+      <span class="banner-label">Ta progression</span>
+      <div class="banner-level">
+        <div class="level-dot"></div>
+        <span id="currentLevel">Débutant</span>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-value" id="statModules">0/10</span>
+        <span class="stat-label" id="statModulesLabel">Modules</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value" id="statStars">0</span>
+        <span class="stat-label">Étoiles</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value" id="statSessions">0</span>
+        <span class="stat-label">Sessions</span>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-meta">
+        <span>Progression globale</span>
+        <span class="pct" id="progressPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-header">
+    <span class="section-suit">♠</span>
+    <h2 class="section-title">Modules d'entraînement</h2>
+    <div class="section-line"></div>
+    <span class="section-suit">♦</span>
+  </div>
+
+  <div class="modules-grid" id="modulesGrid"></div>
+
+</main>
+
+<nav class="bottom-nav">
+  <div class="nav-item active" onclick="closeAllPanels()">
+    <span class="nav-icon">🃏</span>
+    <span class="nav-label">Accueil</span>
+  </div>
+  <div class="nav-item" id="navHistory" onclick="openPanel('history')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Historique</span>
+  </div>
+  <div class="nav-item" id="navAch" onclick="openPanel('achievements')">
+    <span class="nav-icon">🏅</span>
+    <span class="nav-label">Succès</span>
+  </div>
+  <div class="nav-item" id="navSettings" onclick="openPanel('settings')">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-label">Réglages</span>
+  </div>
+</nav>
+
+<!-- PANNEAU SUCCÈS -->
+<div class="panel-overlay" id="panelAchievements" onclick="closePanelOnOverlay(event,'achievements')">
+  <div class="panel-sheet" onclick="event.stopPropagation()">
+    <div class="panel-handle"></div>
+    <div class="panel-inner">
+      <h2 class="panel-title">Succès ♦</h2>
+      <div id="achContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANNEAU HISTORIQUE -->
+<div class="panel-overlay" id="panelHistory" onclick="closePanelOnOverlay(event,'history')">
+  <div class="panel-sheet" onclick="event.stopPropagation()">
+    <div class="panel-handle"></div>
+    <div class="panel-inner">
+      <h2 class="panel-title">Historique ♣</h2>
+      <div id="historyContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANNEAU PARAMÈTRES -->
+<div class="panel-overlay" id="panelSettings" onclick="closePanelOnOverlay(event,'settings')">
+  <div class="panel-sheet" onclick="event.stopPropagation()">
+    <div class="panel-handle"></div>
+    <div class="panel-inner">
+      <h2 class="panel-title">Paramètres ♥</h2>
+
+      <!-- Slider son & effets -->
+      <div class="vol-row" id="volRowSfx">
+        <div class="vol-left">
+          <span class="vol-name">Son &amp; effets</span>
+          <span class="vol-desc">Feedback sonore</span>
+        </div>
+        <div class="vol-controls">
+          <button class="vol-mute-btn" id="muteSfx" onclick="toggleMute('sfx')">🔊</button>
+          <input type="range" class="vol-slider" id="sliderSfx"
+                 min="0" max="100" step="1" value="50"
+                 oninput="onSliderInput('sfx', this)">
+          <span class="vol-pct" id="pctSfx">50</span>
+        </div>
+      </div>
+
+      <!-- Slider musique -->
+      <div class="vol-row" id="volRowMusic">
+        <div class="vol-left">
+          <span class="vol-name">Musique</span>
+          <span class="vol-desc">Ambiance / jeu</span>
+        </div>
+        <div class="vol-controls">
+          <button class="vol-mute-btn" id="muteMusic" onclick="toggleMute('music')">🎵</button>
+          <input type="range" class="vol-slider" id="sliderMusic"
+                 min="0" max="100" step="1" value="0"
+                 oninput="onSliderInput('music', this)">
+          <span class="vol-pct" id="pctMusic">0</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <span class="setting-name">Vibration haptique</span>
+          <span class="setting-desc">Vibration sur réponse incorrecte</span>
+        </div>
+        <div class="toggle on" id="toggleHaptic" onclick="toggleSetting('haptic',this)"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <span class="setting-name">Animations</span>
+          <span class="setting-desc">Effets visuels et transitions</span>
+        </div>
+        <div class="toggle on" id="toggleAnim" onclick="toggleSetting('animations',this)"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <span class="setting-name">Niveau global</span>
+          <span class="setting-desc">Applicable à tous les modules</span>
+        </div>
+        <div class="level-selector">
+          <button class="level-btn" data-level="beginner"     onclick="setLevel('beginner',this)">Déb.</button>
+          <button class="level-btn" data-level="intermediate" onclick="setLevel('intermediate',this)">Int.</button>
+          <button class="level-btn" data-level="expert"       onclick="setLevel('expert',this)">Exp.</button>
+        </div>
+      </div>
+      <div class="setting-row" style="border-bottom:none;margin-top:8px">
+        <div class="setting-info">
+          <span class="setting-name" style="color:var(--red-light)">Réinitialiser</span>
+          <span class="setting-desc">Efface toute la progression et l'historique</span>
+        </div>
+        <button class="btn btn-danger" style="padding:6px 14px;font-size:0.55rem" onclick="confirmReset()">Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/sounds.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+const MODULES_META = window.ChipMindApp.MODULES;
+
+function renderModules() {
+  const grid     = document.getElementById('modulesGrid');
+  const progress = window.ChipMindStorage.getProgress();
+  const settings = window.ChipMindStorage.getSettings();
+  grid.innerHTML = '';
+  MODULES_META.forEach(mod => {
+    const modProg    = progress[mod.id] || {};
+    const comingSoon = !!mod.comingSoon;
+    const locked     = !comingSoon && !modProg.unlocked;
+    const stars      = comingSoon ? 0 : (modProg.stars || 0);
+    const prog       = comingSoon ? 0 : window.ChipMindStorage.getModuleBarPct(mod.id, settings.level);
+    const card       = document.createElement('div');
+    card.className   = 'module-card' + (mod.wide ? ' wide' : '') + (comingSoon ? ' coming-soon' : locked ? ' locked' : ' active-mod');
+    card.setAttribute('data-suit', mod.suit);
+    const starsHtml  = [1,2,3].map(i => `<span class="star ${i<=stars?'filled':'empty'}">★</span>`).join('');
+    const overlayHtml = comingSoon
+      ? '<div class="badge-cs">À venir</div><div class="coming-soon-overlay"><span class="cs-label">Bientôt</span><span class="cs-sub">En développement</span></div>'
+      : locked ? '<div class="lock-overlay">🔒</div>' : '';
+    if (mod.wide) {
+      card.innerHTML = `
+        <span class="module-icon">${mod.icon}</span>
+        <div class="module-info">
+          <div class="module-name">${mod.name}</div>
+          <div class="module-sub">${mod.sub}</div>
+          <div class="module-stars">${starsHtml}</div>
+          <div class="module-prog-bar"><div class="module-prog-fill" style="width:${prog}%"></div></div>
+        </div>
+        <span class="module-num">${String(mod.id).padStart(2,'0')}</span>
+        ${overlayHtml}`;
+    } else {
+      card.innerHTML = `
+        <span class="module-num">${String(mod.id).padStart(2,'0')}</span>
+        <span class="module-icon">${mod.icon}</span>
+        <div class="module-name">${mod.name}</div>
+        <div class="module-sub">${mod.sub}</div>
+        <div class="module-stars">${starsHtml}</div>
+        <div class="module-prog-bar"><div class="module-prog-fill" style="width:${prog}%"></div></div>
+        ${overlayHtml}`;
+    }
+    card.addEventListener('click', () => window.ChipMindApp.goToModule(mod.id));
+    grid.appendChild(card);
+  });
+}
+
+function updateStats() {
+  const stats    = window.ChipMindStorage.getGlobalStats();
+  const settings = window.ChipMindStorage.getSettings();
+  document.getElementById('statModules').textContent = `${stats.completedMods}/10`;
+  const levelLabels = { beginner:'Modules ≥★', intermediate:'Modules ≥★★', expert:'Modules ≥★★★' };
+  document.getElementById('statModulesLabel').textContent = levelLabels[settings.level] || 'Modules';
+  document.getElementById('statStars').textContent    = stats.totalStars;
+  document.getElementById('statSessions').textContent = stats.totalSessions;
+  document.getElementById('progressPct').textContent  = `${stats.progressPct}%`;
+  const lvlLabels = { beginner:'Débutant', intermediate:'Intermédiaire', expert:'Expert' };
+  document.getElementById('currentLevel').textContent = lvlLabels[settings.level] || 'Débutant';
+  setTimeout(() => { document.getElementById('progressFill').style.width = stats.progressPct + '%'; }, 350);
+}
+
+const PANELS = { achievements:'panelAchievements', history:'panelHistory', settings:'panelSettings' };
+
+function openPanel(name) {
+  closeAllPanels();
+  const id = PANELS[name];
+  if (!id) return;
+  document.getElementById(id).classList.add('open');
+  if (name === 'achievements') renderAchievements();
+  if (name === 'history')      renderHistory();
+  if (name === 'settings')     syncSettingsUI();
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (name === 'achievements') document.getElementById('navAch').classList.add('active');
+  if (name === 'history')      document.getElementById('navHistory').classList.add('active');
+  if (name === 'settings')     document.getElementById('navSettings').classList.add('active');
+}
+
+function closeAllPanels() {
+  Object.values(PANELS).forEach(id => document.getElementById(id).classList.remove('open'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('.nav-item').classList.add('active');
+}
+
+function closePanelOnOverlay(e, name) {
+  if (e.target === document.getElementById(PANELS[name])) closeAllPanels();
+}
+
+function renderAchievements() {
+  const catalogue = window.ChipMindAchievements.getCatalogueWithState();
+  const unlocked  = catalogue.filter(a => a.unlocked);
+  const container = document.getElementById('achContent');
+  const TIERS     = window.ChipMindAchievements.TIERS;
+
+  function badge(a) {
+    const isLocked  = !a.unlocked;
+    const isSecret  = a.secret && isLocked;
+    const tierKey   = typeof a.tier === 'object' ? a.tier.key : a.tier;
+    const tierObj   = typeof a.tier === 'object' ? a.tier : (TIERS[a.tier] || TIERS.bronze);
+    const tierEmoji = { bronze:'🥉', silver:'🥈', gold:'🥇' }[tierKey] || '';
+    return `
+      <div class="ach-badge ${isLocked ? 'locked' : 'unlocked'}"
+           style="${isLocked ? '' : `border-color:${tierObj.color};box-shadow:0 0 10px ${tierObj.glow}`}">
+        <span class="ach-icon" style="${isLocked ? 'filter:grayscale(1);opacity:0.25' : `filter:drop-shadow(0 0 5px ${tierObj.glow})`}">
+          ${isSecret ? '🔒' : a.icon}
+        </span>
+        <div class="ach-info">
+          <div class="ach-name">
+            ${isSecret ? '???' : a.name}
+            <span style="font-size:0.5rem;margin-left:4px;opacity:0.55">${tierEmoji}</span>
+          </div>
+          <div class="ach-desc">${isSecret ? 'Succès secret' : a.desc}</div>
+          ${a.unlocked && a.unlockedAt ? `<div class="ach-date">Débloqué le ${fmtDate(a.unlockedAt)}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function group(title, list, color) {
+    if (!list.length) return '';
+    return `<div class="ach-group">
+      <div class="ach-group-title" style="color:${color}">${title}</div>
+      <div class="ach-list">${list.map(badge).join('')}</div>
+    </div>`;
+  }
+
+  function moduleGroup(moduleId, moduleName, moduleIcon) {
+    const list = catalogue.filter(a => a.module === moduleId);
+    if (!list.length) return '';
+    const order  = ['gold','silver','bronze'];
+    const sorted = [...list].sort((a,b) => {
+      const ka = typeof a.tier==='object' ? a.tier.key : a.tier;
+      const kb = typeof b.tier==='object' ? b.tier.key : b.tier;
+      return order.indexOf(ka) - order.indexOf(kb);
+    });
+    const cnt = list.filter(a => a.unlocked).length;
+    return `<div class="ach-group">
+      <div class="ach-group-title" style="color:var(--gold)">
+        ${moduleIcon} ${moduleName}
+        <span style="font-size:0.46rem;margin-left:6px;opacity:0.55;font-weight:400">${cnt}/${list.length}</span>
+      </div>
+      <div class="ach-list">${sorted.map(badge).join('')}</div>
+    </div>`;
+  }
+
+  const byTier  = (key) => (a) => !a.module && !a.secret && (typeof a.tier==='object' ? a.tier.key : a.tier) === key;
+  const secrets = catalogue.filter(a => a.secret);
+  const pct     = Math.round(unlocked.length / catalogue.length * 100);
+
+  container.innerHTML = `
+    <div class="ach-summary">
+      <span class="ach-count">${unlocked.length}</span>
+      <span class="ach-count-label">/ ${catalogue.length} succès débloqués</span>
+    </div>
+    <div class="ach-progress-track">
+      <div class="ach-progress-fill" style="width:0%" id="achFill"></div>
+    </div>
+    <div class="ach-section-header">⭐ Succès globaux</div>
+    ${group('✦ Or',     catalogue.filter(byTier('gold')),   TIERS.gold.color)}
+    ${group('◈ Argent', catalogue.filter(byTier('silver')), TIERS.silver.color)}
+    ${group('◉ Bronze', catalogue.filter(byTier('bronze')), TIERS.bronze.color)}
+    <div class="ach-section-header">🎰 Succès par module</div>
+    ${moduleGroup(1,  'Tables Croupier',    '✖️')}
+    ${moduleGroup(2,  'Tableau Mélangé',    '🔀')}
+    ${moduleGroup(3,  'Comptage Cartes',    '🃏')}
+    ${group('✧ Secrets', secrets, TIERS.secret.color)}
+  `;
+  setTimeout(() => { const f = document.getElementById('achFill'); if(f) f.style.width = pct+'%'; }, 100);
+}
+
+function renderHistory() {
+  const history   = window.ChipMindStorage.getHistory();
+  const container = document.getElementById('historyContent');
+  if (!history.length) {
+    container.innerHTML = `<div class="history-empty">Aucune session pour l'instant.<br>Lance ton premier module !</div>`;
+    return;
+  }
+  container.innerHTML = history.slice(0,30).map(entry => {
+    const mod      = MODULES_META.find(m => m.id === entry.moduleId);
+    const starsHtml= [1,2,3].map(i => `<span class="star ${i<=(entry.stars||0)?'filled':'empty'}" style="font-size:0.6rem">★</span>`).join('');
+    const time     = entry.timeMs ? ` · ${window.ChipMindApp.formatTime(entry.timeMs)}` : '';
+    return `<div class="history-item">
+      <span class="history-icon">${mod?.icon || '🎲'}</span>
+      <div class="history-info">
+        <div class="history-name">${entry.moduleName || mod?.name || 'Module'}</div>
+        <div class="history-meta">${fmtDate(entry.date)}${time} · ${entry.successRate||0}%</div>
+      </div>
+      <div class="history-stars">${starsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function syncSettingsUI() {
+  const s = window.ChipMindStorage.getSettings();
+  _syncSlider('sfx',   s.soundVolume ?? 50);
+  _syncSlider('music', s.musicVolume ?? 0);
+  document.getElementById('toggleHaptic').classList.toggle('on', !!s.haptic);
+  document.getElementById('toggleAnim').classList.toggle('on', !!s.animations);
+  document.querySelectorAll('.level-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.level === s.level));
+  const labels = { beginner:'Débutant', intermediate:'Intermédiaire', expert:'Expert' };
+  document.getElementById('currentLevel').textContent = labels[s.level] || 'Débutant';
+}
+
+/* ── Helpers sliders ── */
+function _syncSlider(type, vol) {
+  const slider  = document.getElementById('slider' + (type==='sfx'?'Sfx':'Music'));
+  const muteBtn = document.getElementById('mute'   + (type==='sfx'?'Sfx':'Music'));
+  const pct     = document.getElementById('pct'    + (type==='sfx'?'Sfx':'Music'));
+  if (!slider) return;
+  slider.value = vol;
+  _updateSliderTrack(slider, vol);
+  const muted = vol === 0;
+  slider.classList.toggle('muted', muted);
+  if (muteBtn) {
+    muteBtn.classList.toggle('muted', muted);
+    muteBtn.textContent = muted ? '🔇' : (type === 'sfx' ? '🔊' : '🎵');
+  }
+  if (pct) { pct.textContent = vol; pct.classList.toggle('muted', muted); }
+}
+
+function _updateSliderTrack(slider, vol) {
+  slider.style.setProperty('--fill', vol + '%');
+}
+
+/* Appelé à chaque mouvement du slider */
+function onSliderInput(type, slider) {
+  const vol = parseInt(slider.value, 10);
+  const key = type === 'sfx' ? 'soundVolume' : 'musicVolume';
+  window.ChipMindStorage.updateSetting(key, vol);
+  _syncSlider(type, vol);
+  window.ChipMindSounds?.onVolumeChange(type);
+}
+
+/* Bouton mute / dé-mute */
+function toggleMute(type) {
+  const s    = window.ChipMindStorage.getSettings();
+  const key  = type === 'sfx' ? 'soundVolume' : 'musicVolume';
+  const cur  = s[key] ?? (type === 'sfx' ? 50 : 0);
+  const ssKey= 'cm_' + type + '_save';
+  if (cur > 0) {
+    sessionStorage.setItem(ssKey, String(cur));
+    window.ChipMindStorage.updateSetting(key, 0);
+    _syncSlider(type, 0);
+    window.ChipMindSounds?.onVolumeChange(type);
+  } else {
+    const restored = parseInt(sessionStorage.getItem(ssKey) || (type==='sfx'?'50':'50'), 10);
+    window.ChipMindStorage.updateSetting(key, restored);
+    _syncSlider(type, restored);
+    window.ChipMindSounds?.onVolumeChange(type);
+  }
+}
+function toggleSetting(key, el) {
+  const s = window.ChipMindStorage.updateSetting(key, !el.classList.contains('on'));
+  el.classList.toggle('on', s[key]);
+  window.ChipMindApp.showToast(s[key] ? `${key} activé` : `${key} désactivé`);
+}
+
+function setLevel(level, btn) {
+  window.ChipMindStorage.updateSetting('level', level);
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels = { beginner:'Débutant', intermediate:'Intermédiaire', expert:'Expert' };
+  document.getElementById('currentLevel').textContent = labels[level] || level;
+  window.ChipMindApp.showToast(`Niveau : ${labels[level]}`);
+  renderModules();
+  updateStats();
+}
+
+function confirmReset() {
+  if (confirm('Effacer toute la progression ? Cette action est irréversible.')) {
+    window.ChipMindStorage.resetAll();
+    closeAllPanels();
+    renderModules();
+    updateStats();
+    window.ChipMindApp.showToast('Progression réinitialisée');
+  }
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function buildBackground() {
+  const r = document.getElementById('bgRoulette');
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('div');
+    s.className = 'roulette-spoke';
+    s.style.transform = `rotate(${i*10}deg)`;
+    r.appendChild(s);
+  }
+  const suits = ['♠','♥','♦','♣'];
+  const bg    = document.querySelector('.bg-felt');
+  function spawn() {
+    const el = document.createElement('div');
+    el.className = 'float-suit';
+    el.textContent = suits[Math.floor(Math.random()*4)];
+    el.style.cssText = `left:${Math.random()*100}vw;bottom:-2rem;animation-duration:${10+Math.random()*9}s;animation-delay:${Math.random()*2}s;font-size:${0.7+Math.random()*1.1}rem;`;
+    bg.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+  for (let i = 0; i < 5; i++) setTimeout(spawn, i*1000);
+  setInterval(spawn, 2000);
+}
+
+document.getElementById('btnSettings').addEventListener('click', () => openPanel('settings'));
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
+function init() {
+  buildBackground();
+  renderModules();
+  updateStats();
+  window.ChipMindAchievements.checkAll();
+  window.ChipMindSounds?.preload();
+  window.ChipMindSounds?.initGlobalSounds();
+  window.ChipMindSounds?.switchContext('ambient');
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { renderModules(); updateStats(); }
+});
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

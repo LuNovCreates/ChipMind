@@ -1,0 +1,27 @@
+# ── OS ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Éditeurs ────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*~
+
+# ── Node (si jamais utilisé) ─────────────────────
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# ── Fichiers temporaires / build ─────────────────
+dist/
+build/
+*.tmp
+*.bak
+*.orig
+
+# ── Netlify ──────────────────────────────────────
+.netlify/
