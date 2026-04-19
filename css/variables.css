@@ -76,6 +76,7 @@
 }
 
 html {
+  font-size: 17px;       /* base +6% — scale tous les rem proportionnellement */
   scroll-behavior: smooth;
 }
 

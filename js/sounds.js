@@ -120,9 +120,21 @@ const ChipMindSounds = (() => {
     a.loop    = true;
     a.volume  = 0;
     a.preload = 'auto';
-    a.addEventListener('ended', () => {
-      if (a.loop) { a.currentTime = 0; a.play().catch(() => {}); }
+
+    /* Fix loop sans gap : on repart manuellement 100ms avant la fin
+       pour contourner le délai natif du moteur audio mobile */
+    a.addEventListener('timeupdate', () => {
+      if (a.duration && a.currentTime >= a.duration - 0.1) {
+        a.currentTime = 0;
+      }
     });
+
+    /* Fallback si timeupdate rate le crochet */
+    a.addEventListener('ended', () => {
+      a.currentTime = 0;
+      a.play().catch(() => {});
+    });
+
     return a;
   }
 
@@ -225,6 +237,21 @@ const ChipMindSounds = (() => {
      SONS GLOBAUX — keypress délégué
   ════════════════════════════════════════ */
   function initGlobalSounds() {
+    /* ── Pause / reprise selon visibilité de la page (sortie d'app, veille) ── */
+    document.addEventListener('visibilitychange', () => {
+      if (!_current) return;
+      if (document.hidden) {
+        /* App en arrière-plan — pause immédiate */
+        _current.pause();
+      } else {
+        /* Retour au premier plan — reprise si la musique était active */
+        if (musicEnabled() && _current.paused) {
+          _current.play().catch(() => {});
+        }
+      }
+    });
+
+    /* ── Keypress délégué ── */
     document.addEventListener('click', (e) => {
       const target = e.target.closest(
         'button, .mode-btn, .mode-card, .level-btn, .choice-btn, .module-card, .table-btn, [onclick]'

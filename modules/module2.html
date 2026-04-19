@@ -11,9 +11,9 @@
   <link rel="stylesheet" href="../css/variables.css" />
 
   <style>
-    body { overflow-x: hidden; min-height: 100dvh; }
+    body { overflow: hidden; }
 
-    .screen { display: none; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom, 16px); }
+    .screen { display: none; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; height: 100dvh; overflow: hidden; }
     .screen.active { display: flex; flex-direction: column; }
 
     /* ⭐ Ecran de jeu : tient dans le viewport, pas de scroll */
@@ -212,7 +212,7 @@
     .feedback-overlay.bad-fb .feedback-text { color: var(--red-light); }
 
     /* ══════════ RÉSULTATS ══════════ */
-    .results-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 20px 30px; gap: 18px; overflow-y: auto; }
+    .results-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: 0 20px 24px; gap: 14px; overflow-y: auto; }
     .result-stars { display: flex; gap: 12px; justify-content: center; margin: 10px 0; }
     .result-star { font-size: 3rem; filter: grayscale(1); opacity: 0.25; transition: all 0.4s var(--ease-spring); }
     .result-star.lit { filter: drop-shadow(0 0 14px var(--gold-glow)); color: var(--gold); opacity: 1; }
