@@ -1,0 +1,10 @@
+# Normalise les fins de ligne en LF dans le repo (évite les warnings CRLF/LF)
+* text=auto eol=lf
+
+# Fichiers binaires — pas de conversion
+*.mp3   binary
+*.png   binary
+*.ico   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary

@@ -237,18 +237,38 @@ const ChipMindSounds = (() => {
      SONS GLOBAUX — keypress délégué
   ════════════════════════════════════════ */
   function initGlobalSounds() {
-    /* ── Pause / reprise selon visibilité de la page (sortie d'app, veille) ── */
+    /* ── Pause / reprise : couvre tous les cas mobiles ── */
+
+    /* visibilitychange : onglet mis en arrière-plan, écran verrouillé */
     document.addEventListener('visibilitychange', () => {
-      if (!_current) return;
       if (document.hidden) {
-        /* App en arrière-plan — pause immédiate */
-        _current.pause();
+        _current?.pause();
       } else {
-        /* Retour au premier plan — reprise si la musique était active */
-        if (musicEnabled() && _current.paused) {
-          _current.play().catch(() => {});
-        }
+        if (musicEnabled() && _current?.paused) _current.play().catch(() => {});
       }
+    });
+
+    /* pagehide : plus fiable que visibilitychange sur Android PWA */
+    window.addEventListener('pagehide', () => {
+      _current?.pause();
+    });
+
+    /* freeze : Page Lifecycle API (Chrome Android) — app gelée par le système */
+    window.addEventListener('freeze', () => {
+      _current?.pause();
+    });
+
+    /* resume : retour depuis état gelé */
+    window.addEventListener('resume', () => {
+      if (musicEnabled() && _current?.paused) _current.play().catch(() => {});
+    });
+
+    /* blur/focus sur la fenêtre (PWA standalone) */
+    window.addEventListener('blur', () => {
+      _current?.pause();
+    });
+    window.addEventListener('focus', () => {
+      if (musicEnabled() && _current?.paused) _current.play().catch(() => {});
     });
 
     /* ── Keypress délégué ── */

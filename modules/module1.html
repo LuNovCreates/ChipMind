@@ -66,7 +66,7 @@
     /* ══════════════════════════════════════════════════════
        ÉCRAN 0 — CONFIGURATION
     ══════════════════════════════════════════════════════ */
-    .config-body { padding: 0 20px; flex: 1; overflow-y: auto; }
+    .config-body { padding: 0 20px; flex: 1; min-height: 0; overflow-y: auto; }
     .config-section { margin-bottom: 26px; }
     .config-label {
       font-family: var(--font-mono); font-size: 0.55rem;
@@ -209,7 +209,8 @@
 
     /* Bouton lancer */
     .btn-launch {
-      margin: 20px 20px 24px; width: calc(100% - 40px);
+      margin: 12px 20px 16px; width: calc(100% - 40px);
+      flex-shrink: 0;   /* ne jamais comprimer — toujours visible */
       padding: 16px;
       background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
       border: none; border-radius: var(--radius);
