@@ -86,6 +86,10 @@ export function play(category) {
 
 /* ── Préchargement + pont vers les sliders ── */
 export function preload() {
+  /* Empêche l'audio de couper/ducker la musique d'autres apps (Spotify, YT Music…) */
+  try {
+    if ('audioSession' in navigator) navigator.audioSession.type = 'ambient';
+  } catch {}
   try {
     Object.entries(SFX_FILES).forEach(([cat, file]) => {
       if (!_sfxCache[cat]) {
