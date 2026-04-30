@@ -4,21 +4,33 @@
    ⚠️  Incrémenter CACHE_NAME à chaque déploiement significatif
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'chipmind-v2';
+const CACHE_NAME = 'chipmind-v11';
 
 const CACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/css/variables.css',
+  '/js/core/app.js',
+  '/js/core/router.js',
+  '/js/core/state.js',
+  '/js/core/storage.js',
+  '/js/core/sound.js',
+  '/js/core/migrate.js',
+  '/js/modules/module01.js',
+  '/js/modules/module02.js',
+  '/js/modules/module03.js',
+  '/js/modules/module05.js',
   '/js/storage.js',
-  '/js/achievements.js',
-  '/js/sounds.js',
-  '/js/app.js',
-  '/modules/module1.html',
-  '/modules/module2.html',
-  '/modules/module3.html',
-  /* Sons — tous en minuscules */
+  /* Polices auto-hébergées */
+  '/assets/fonts/PlayfairDisplay-Normal.woff2',
+  '/assets/fonts/PlayfairDisplay-Italic.woff2',
+  '/assets/fonts/RobotoMono.woff2',
+  '/assets/fonts/CormorantGaramond-Normal.woff2',
+  '/assets/fonts/CormorantGaramond-Italic.woff2',
+  '/assets/fonts/Lato-Regular.woff2',
+  '/assets/fonts/Lato-Bold.woff2',
+  /* Sons */
   '/assets/sounds/correct.mp3',
   '/assets/sounds/wrong.mp3',
   '/assets/sounds/flip.mp3',
@@ -69,26 +81,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
-  /* Google Fonts : network-first pour fraîcheur */
-  if (event.request.url.includes('fonts.googleapis') ||
-      event.request.url.includes('fonts.gstatic')) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(async cache => {
-        const cached = await cache.match(event.request);
-        if (cached) return cached;
-        try {
-          const response = await fetch(event.request);
-          cache.put(event.request, response.clone());
-          return response;
-        } catch {
-          return cached || new Response('', { status: 503 });
-        }
-      })
-    );
-    return;
-  }
-
-  /* Tout le reste : cache-first */
+  /* Cache-first pour tout */
   event.respondWith(
     caches.match(event.request).then(async cached => {
       if (cached) return cached;

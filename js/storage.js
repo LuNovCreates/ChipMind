@@ -1,124 +1,60 @@
-/* ═══════════════════════════════════════════════════════════════
-   ChipMind — storage.js
-   Gestion localStorage : progression, paramètres, historique
-═══════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════
+   ChipMind — storage.js (legacy compat layer)
+   API synchrone conservée ; données stockées dans
+   IndexedDB (clé "legacy_state") avec cache mémoire.
+   localStorage est en lecture de secours uniquement.
+════════════════════════════════════════════════════ */
 
 const Storage = (() => {
 
-  const KEYS = {
-    PROGRESS:     'chipmind_progress',
-    SETTINGS:     'chipmind_settings',
-    HISTORY:      'chipmind_history',
-    ACHIEVEMENTS: 'chipmind_achievements',
-  };
-
-  /* ─────────────────────────────────────────────────────────
-     MODES PAR MODULE
-     Définit le nombre de modes de chaque module.
-     Utilisé pour calculer la moyenne de la jauge dashboard.
-     Mis à jour au fur et à mesure que les modules sont créés.
-  ───────────────────────────────────────────────────────── */
+  /* ── Modes par module (source de vérité pour la jauge) ── */
   const MODULE_MODES = {
-    1:  ['flashcard', 'qcm', 'libre'],   // Tables Croupier
-    2:  ['normal'],                       // Tableau mélangé
-    3:  ['montee', 'descente', 'allerretour'], // Comptage Cartes
-    4:  ['grille1', 'grille2'],           // Grilles de Calcul
-    5:  ['plein', 'cheval', 'carre'],     // Paiements Roulette
-    6:  ['multi'],                        // Multi-joueurs
-    7:  ['chrono'],                       // Chrono 90s
-    8:  ['suite'],                        // Suites Logiques
-    9:  ['memo'],                         // Mémoire Séquence
-    10: ['cascade'],                      // Additions en Cascade
+    1:  ['flashcard', 'qcm', 'libre'],
+    2:  ['normal'],
+    3:  ['montee', 'descente', 'allerretour'],
+    4:  ['grille1', 'grille2'],
+    5:  ['beginner', 'intermediate', 'expert'],
+    6:  ['multi'],
+    7:  ['chrono'],
+    8:  ['suite'],
+    9:  ['memo'],
+    10: ['cascade'],
   };
 
-  /* ── Helper : génère un objet levelScores vide pour un module ── */
   function makeEmptyLevelScores(moduleId) {
     const modes   = MODULE_MODES[moduleId] || ['default'];
     const modeObj = {};
     modes.forEach(m => { modeObj[m] = 0; });
-    return {
-      beginner:     { ...modeObj },
-      intermediate: { ...modeObj },
-      expert:       { ...modeObj },
-    };
+    return { beginner: { ...modeObj }, intermediate: { ...modeObj }, expert: { ...modeObj } };
   }
 
-  /* ── Valeurs par défaut ── */
   const DEFAULT_SETTINGS = {
-    level:       'beginner',
-    soundVolume: 50,   // 0-100 (0 = muet)
-    musicVolume: 0,    // 0-100 (0 = muet / off par défaut)
-    haptic:      true,
-    animations:  true,
+    level: 'beginner', soundVolume: 50, musicVolume: 0, haptic: true, animations: true,
   };
 
-  /* Génère DEFAULT_PROGRESS dynamiquement */
   function makeDefaultProgress() {
     const p = {};
     for (let i = 1; i <= 10; i++) {
       p[i] = {
-        stars:       0,
-        bestTime:    null,
-        sessions:    0,
-        unlocked:    i <= 5,    // modules 1-5 débloqués par défaut
-        levelScores: makeEmptyLevelScores(i),
+        stars: 0, bestTime: null, sessions: 0,
+        unlocked: i <= 5,
+        levelScores:   makeEmptyLevelScores(i),
+        starsPerLevel: { beginner: 0, intermediate: 0, expert: 0 },
       };
     }
     return p;
   }
 
-  /* ─────────────────────────────────────────────────────────
-     PARAMÈTRES
-  ───────────────────────────────────────────────────────── */
-
-  function getSettings() {
-    try {
-      const raw = localStorage.getItem(KEYS.SETTINGS);
-      return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_SETTINGS };
-    } catch { return { ...DEFAULT_SETTINGS }; }
+  function mergeStarsPerLevel(saved) {
+    const def = { beginner: 0, intermediate: 0, expert: 0 };
+    if (!saved || typeof saved !== 'object') return def;
+    return {
+      beginner:     Math.max(0, Math.min(3, saved.beginner     || 0)),
+      intermediate: Math.max(0, Math.min(3, saved.intermediate || 0)),
+      expert:       Math.max(0, Math.min(3, saved.expert       || 0)),
+    };
   }
 
-  function saveSettings(settings) {
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
-  }
-
-  function updateSetting(key, value) {
-    const s = getSettings();
-    s[key] = value;
-    saveSettings(s);
-    return s;
-  }
-
-  /* ─────────────────────────────────────────────────────────
-     PROGRESSION — lecture avec migration automatique
-  ───────────────────────────────────────────────────────── */
-
-  function getProgress() {
-    try {
-      const raw      = localStorage.getItem(KEYS.PROGRESS);
-      const defaults = makeDefaultProgress();
-      if (!raw) return defaults;
-
-      const saved = JSON.parse(raw);
-
-      /* Fusion profonde : préserve les levelScores existants,
-         ajoute les champs manquants sans écraser les données */
-      const merged = { ...defaults };
-      for (let i = 1; i <= 10; i++) {
-        if (saved[i]) {
-          merged[i] = {
-            ...defaults[i],
-            ...saved[i],
-            /* S'assure que levelScores existe et a tous les niveaux */
-            levelScores: mergeLevelScores(defaults[i].levelScores, saved[i].levelScores),
-          };
-        }
-      }
-      return merged;
-    } catch { return makeDefaultProgress(); }
-  }
-
-  /* Fusionne levelScores sauvegardé avec la structure par défaut */
   function mergeLevelScores(defaultLS, savedLS) {
     if (!savedLS) return { ...defaultLS };
     const result = {};
@@ -128,33 +64,140 @@ const Storage = (() => {
     return result;
   }
 
-  function saveProgress(progress) {
-    localStorage.setItem(KEYS.PROGRESS, JSON.stringify(progress));
+  /* ── Cache mémoire ── */
+  let _data = { settings: null, progress: null, history: null, achievements: null };
+
+  /* ── IndexedDB (partage la même DB que js/core/storage.js) ── */
+  let _db = null;
+
+  function _openDB() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('ChipMindDB', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      };
+      req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+      req.onerror   = e => reject(e.target.error);
+    });
   }
 
-  /* ─────────────────────────────────────────────────────────
-     updateModuleProgress — appelé via app.js endSession()
-     Sauvegarde étoiles, bestTime, sessions
-  ───────────────────────────────────────────────────────── */
-  function updateModuleProgress(moduleId, result) {
-    const prog = getProgress();
-    const mod  = prog[moduleId] || {};
+  function _idbGet(key) {
+    return _openDB().then(db => new Promise((res, rej) => {
+      const r = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+      r.onsuccess = () => res(r.result ?? null);
+      r.onerror   = e => rej(e.target.error);
+    }));
+  }
 
-    mod.sessions  = (mod.sessions || 0) + 1;
-    mod.stars     = Math.max(mod.stars || 0, result.stars || 0);
+  function _idbSet(key, value) {
+    return _openDB().then(db => new Promise((res, rej) => {
+      const r = db.transaction('kv', 'readwrite').objectStore('kv').put(value, key);
+      r.onsuccess = () => res();
+      r.onerror   = e => rej(e.target.error);
+    }));
+  }
+
+  /* Persiste le cache → IDB (fire-and-forget) */
+  function _persist() {
+    _idbSet('legacy_state', {
+      settings:     _data.settings,
+      progress:     _data.progress,
+      history:      _data.history,
+      achievements: _data.achievements,
+    }).catch(err => console.warn('[Storage] persist failed:', err));
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     initAsync() — à appeler une seule fois avant tout accès.
+     Charge depuis IDB ; repli sur localStorage si IDB vide.
+  ────────────────────────────────────────────────────────── */
+  async function initAsync() {
+    try {
+      const saved = await _idbGet('legacy_state');
+      if (saved) {
+        _data.settings     = saved.settings     ?? null;
+        _data.progress     = saved.progress     ?? null;
+        _data.history      = saved.history      ?? null;
+        _data.achievements = saved.achievements ?? null;
+        return;
+      }
+    } catch {}
+
+    /* Repli localStorage (données pré-migration) */
+    function _p(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
+    _data.settings     = _p('chipmind_settings');
+    _data.progress     = _p('chipmind_progress');
+    _data.history      = _p('chipmind_history');
+    _data.achievements = _p('chipmind_achievements');
+  }
+
+  /* ── Paramètres ── */
+
+  function getSettings() {
+    return { ...DEFAULT_SETTINGS, ...(_data.settings || {}) };
+  }
+
+  function saveSettings(settings) {
+    _data.settings = { ...settings };
+    _persist();
+  }
+
+  function updateSetting(key, value) {
+    const s = getSettings();
+    s[key]  = value;
+    _data.settings = s;
+    _persist();
+    return s;
+  }
+
+  /* ── Progression ── */
+
+  function getProgress() {
+    try {
+      const defaults = makeDefaultProgress();
+      if (!_data.progress) return defaults;
+      const saved  = _data.progress;
+      const merged = { ...defaults };
+      for (let i = 1; i <= 10; i++) {
+        if (saved[i]) {
+          merged[i] = {
+            ...defaults[i], ...saved[i],
+            levelScores:   mergeLevelScores(defaults[i].levelScores, saved[i].levelScores),
+            starsPerLevel: mergeStarsPerLevel(saved[i].starsPerLevel),
+          };
+        }
+      }
+      return merged;
+    } catch { return makeDefaultProgress(); }
+  }
+
+  function saveProgress(progress) {
+    _data.progress = { ...progress };
+    _persist();
+  }
+
+  function updateModuleProgress(moduleId, result) {
+    const prog  = getProgress();
+    const mod   = prog[moduleId] || {};
+    const level = getSettings().level || 'beginner';
+
+    mod.sessions = (mod.sessions || 0) + 1;
+    mod.stars    = Math.max(mod.stars || 0, result.stars || 0);
 
     if (result.time !== undefined && result.time !== null) {
-      mod.bestTime = (mod.bestTime === null || mod.bestTime === undefined)
+      mod.bestTime = (mod.bestTime == null)
         ? result.time
         : Math.min(mod.bestTime, result.time);
     }
 
-    /* S'assure que levelScores est initialisé */
-    if (!mod.levelScores) mod.levelScores = makeEmptyLevelScores(moduleId);
+    if (!mod.levelScores)   mod.levelScores   = makeEmptyLevelScores(moduleId);
+    if (!mod.starsPerLevel) mod.starsPerLevel  = { beginner: 0, intermediate: 0, expert: 0 };
+    mod.starsPerLevel[level] = Math.max(mod.starsPerLevel[level] || 0, result.stars || 0);
 
     prog[moduleId] = mod;
 
-    /* Débloque le module suivant si ≥1 étoile */
     if ((result.stars || 0) >= 1 && moduleId < 10) {
       if (prog[moduleId + 1]) prog[moduleId + 1].unlocked = true;
     }
@@ -163,15 +206,6 @@ const Storage = (() => {
     return prog;
   }
 
-  /* ─────────────────────────────────────────────────────────
-     updateModuleScore — appelé par chaque module en fin de session
-     Sauvegarde le meilleur score par mode ET par niveau.
-
-     @param {number} moduleId
-     @param {string} level    — 'beginner' | 'intermediate' | 'expert'
-     @param {string} mode     — ex. 'flashcard' | 'qcm' | 'libre'
-     @param {number} rate     — 0–100 (taux de réussite de la session)
-  ───────────────────────────────────────────────────────── */
   function updateModuleScore(moduleId, level, mode, rate) {
     const prog = getProgress();
     const mod  = prog[moduleId] || {};
@@ -187,134 +221,102 @@ const Storage = (() => {
     return mod.levelScores[level];
   }
 
-  /* ─────────────────────────────────────────────────────────
-     getModuleBarPct — calcule le pourcentage pour la jauge dashboard
-     Formule : somme des meilleurs scores par mode / nombre total de modes
-
-     Modes non joués = 0, ce qui tire la moyenne vers le bas
-     intentionnellement (encourage à jouer tous les modes).
-
-     @param {number} moduleId
-     @param {string} level    — niveau actif dans les paramètres
-     @returns {number}        — 0 à 100
-  ───────────────────────────────────────────────────────── */
   function getModuleBarPct(moduleId, level) {
     const prog  = getProgress();
     const mod   = prog[moduleId];
     const modes = MODULE_MODES[moduleId] || ['default'];
-
     if (!mod || !mod.levelScores || !mod.levelScores[level]) return 0;
-
     const levelData = mod.levelScores[level];
     const total     = modes.reduce((sum, m) => sum + (levelData[m] || 0), 0);
     return Math.round(total / modes.length);
   }
 
-  /* ─────────────────────────────────────────────────────────
-     HISTORIQUE
-  ───────────────────────────────────────────────────────── */
+  /* ── Historique ── */
 
   function getHistory() {
-    try {
-      const raw = localStorage.getItem(KEYS.HISTORY);
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
+    return Array.isArray(_data.history) ? [..._data.history] : [];
   }
 
   function addHistoryEntry(entry) {
     const history = getHistory();
     history.unshift({ ...entry, date: entry.date || new Date().toISOString() });
     if (history.length > 100) history.splice(100);
-    localStorage.setItem(KEYS.HISTORY, JSON.stringify(history));
+    _data.history = history;
+    _persist();
     return history;
   }
 
-  /* ─────────────────────────────────────────────────────────
-     SUCCÈS
-  ───────────────────────────────────────────────────────── */
+  /* ── Succès ── */
 
   function getAchievements() {
-    try {
-      const raw = localStorage.getItem(KEYS.ACHIEVEMENTS);
-      return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
+    return { ...(_data.achievements || {}) };
   }
 
   function unlockAchievement(id) {
     const ach = getAchievements();
     if (ach[id]) return false;
     ach[id] = { unlockedAt: new Date().toISOString() };
-    localStorage.setItem(KEYS.ACHIEVEMENTS, JSON.stringify(ach));
+    _data.achievements = ach;
+    _persist();
     return true;
   }
 
-  /* ─────────────────────────────────────────────────────────
-     STATS GLOBALES
-  ───────────────────────────────────────────────────────── */
+  /* ── Stats globales ── */
 
-  /**
-   * Nombre d'étoiles minimum pour valider un module selon le niveau.
-   * Débutant → 1★  |  Intermédiaire → 2★★  |  Expert → 3★★★
-   */
-  const STARS_REQUIRED = { beginner: 1, intermediate: 2, expert: 3 };
+  const MAX_STARS = 90; // 10 modules × 3 difficultés × 3 étoiles
 
-  /**
-   * Retourne le nombre de modules validés pour un niveau donné.
-   * @param {string} level — 'beginner' | 'intermediate' | 'expert'
-   */
   function getCompletedModsForLevel(level) {
-    const prog     = getProgress();
-    const required = STARS_REQUIRED[level] || 1;
-    return Object.values(prog).filter(m => (m.stars || 0) >= required).length;
+    const prog = getProgress();
+    return Object.values(prog).filter(m => {
+      const spl = m.starsPerLevel;
+      if (spl) return (spl[level] || 0) >= 3;
+      return (m.stars || 0) >= 3; // rétrocompat
+    }).length;
   }
 
   function getGlobalStats() {
     const prog     = getProgress();
     const ach      = getAchievements();
     const settings = getSettings();
+    const modules  = Object.values(prog);
 
-    const modules       = Object.values(prog);
-    const totalStars    = modules.reduce((s, m) => s + (m.stars || 0), 0);
-    const maxStars      = modules.length * 3;
+    const totalStars = modules.reduce((s, m) => {
+      const spl = m.starsPerLevel;
+      if (spl) return s + (spl.beginner || 0) + (spl.intermediate || 0) + (spl.expert || 0);
+      return s + (m.stars || 0); // rétrocompat sans starsPerLevel
+    }, 0);
+
     const totalSessions = modules.reduce((s, m) => s + (m.sessions || 0), 0);
-    const unlockedAch   = Object.keys(ach).length;
-
-    /* completedMods dépend du niveau actif */
     const completedMods = getCompletedModsForLevel(settings.level);
 
     return {
-      totalStars,
-      maxStars,
-      completedMods,
-      totalModules: modules.length,
-      totalSessions,
-      progressPct: Math.round((totalStars / maxStars) * 100),
-      unlockedAchievements: unlockedAch,
+      totalStars, maxStars: MAX_STARS, completedMods,
+      totalModules: modules.length, totalSessions,
+      progressPct: Math.round((totalStars / MAX_STARS) * 100),
+      unlockedAchievements: Object.keys(ach).length,
     };
   }
 
-  /* ─────────────────────────────────────────────────────────
-     RESET
-  ───────────────────────────────────────────────────────── */
+  /* ── Réinitialisation complète ── */
 
   function resetAll() {
-    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    _data = { settings: null, progress: null, history: null, achievements: null };
+    _db   = null;
+    indexedDB.deleteDatabase('ChipMindDB');
+    localStorage.clear();
+    if ('caches' in window) {
+      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+    }
   }
 
   /* ── API publique ── */
   return {
-    getSettings,
-    saveSettings,
-    updateSetting,
-    getProgress,
-    updateModuleProgress,
-    updateModuleScore,
-    getModuleBarPct,
-    getCompletedModsForLevel,  // ← nouveau
-    getHistory,
-    addHistoryEntry,
-    getAchievements,
-    unlockAchievement,
+    initAsync,
+    getSettings, saveSettings, updateSetting,
+    getProgress, updateModuleProgress, updateModuleScore,
+    getModuleBarPct, getCompletedModsForLevel,
+    getHistory, addHistoryEntry,
+    getAchievements, unlockAchievement,
     getGlobalStats,
     MODULE_MODES,
     resetAll,

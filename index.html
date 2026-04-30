@@ -10,8 +10,6 @@
   <link rel="manifest" href="manifest.json" />
   <title>ChipMind</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Roboto+Mono:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/variables.css" />
 
   <style>
@@ -142,6 +140,19 @@
     .nav-item:hover .nav-icon { color: var(--gold-light); transform: scale(1.1); }
     .nav-label { font-family: var(--font-mono); font-size: 0.46rem; text-transform: uppercase; letter-spacing: 0.11em; color: var(--ivory-dim); }
 
+    .nav-action-btn {
+      width: calc(100% - 40px); margin: 4px 20px;
+      margin-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+      padding: 14px; background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+      border: none; border-radius: var(--radius);
+      font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700;
+      color: var(--felt-deep); cursor: pointer; letter-spacing: 0.01em;
+      box-shadow: 0 4px 18px var(--gold-glow); transition: all 0.2s var(--ease-spring);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-action-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow-gold); }
+    .nav-action-btn:active { transform: scale(0.97); }
+
     /* PANNEAUX */
     .panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .panel-overlay.open { opacity: 1; pointer-events: all; }
@@ -239,6 +250,7 @@
       .modules-grid  { gap: 10px; padding: 0 14px; }
       .module-card   { padding: 14px 11px 12px; }
     }
+
   </style>
 </head>
 
@@ -248,83 +260,22 @@
   <div class="bg-roulette" id="bgRoulette"></div>
 </div>
 
-<main class="app">
-
-  <header class="header">
-    <div>
-      <div class="logo-eyebrow">Casino Training</div>
-      <div class="logo-title">ChipMind</div>
-      <div class="logo-sub">L'école du croupier d'élite</div>
-    </div>
-    <span class="header-icon">🎰</span>
-    <button class="btn-settings" id="btnSettings" aria-label="Paramètres">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </button>
-  </header>
-
-  <section class="progress-banner">
-    <div class="banner-top">
-      <span class="banner-label">Ta progression</span>
-      <div class="banner-level">
-        <div class="level-dot"></div>
-        <span id="currentLevel">Débutant</span>
-      </div>
-    </div>
-    <div class="stats-row">
-      <div class="stat-item">
-        <span class="stat-value" id="statModules">0/10</span>
-        <span class="stat-label" id="statModulesLabel">Modules</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <span class="stat-value" id="statStars">0</span>
-        <span class="stat-label">Étoiles</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <span class="stat-value" id="statSessions">0</span>
-        <span class="stat-label">Sessions</span>
-      </div>
-    </div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-meta">
-        <span>Progression globale</span>
-        <span class="pct" id="progressPct">0%</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
-    </div>
-  </section>
-
-  <div class="section-header">
-    <span class="section-suit">♠</span>
-    <h2 class="section-title">Modules d'entraînement</h2>
-    <div class="section-line"></div>
-    <span class="section-suit">♦</span>
-  </div>
-
-  <div class="modules-grid" id="modulesGrid"></div>
-
-</main>
+<div id="root" class="app"></div>
 
 <nav class="bottom-nav">
-  <div class="nav-item active" onclick="closeAllPanels()">
+  <div class="nav-item active" onclick="navigate('#/')">
     <span class="nav-icon">🃏</span>
     <span class="nav-label">Accueil</span>
   </div>
-  <div class="nav-item" id="navHistory" onclick="openPanel('history')">
+  <div class="nav-item" id="navHistory" onclick="navigate('#/history')">
     <span class="nav-icon">📊</span>
     <span class="nav-label">Historique</span>
   </div>
-  <div class="nav-item" id="navAch" onclick="openPanel('achievements')">
+  <div class="nav-item" id="navAch" onclick="navigate('#/achievements')">
     <span class="nav-icon">🏅</span>
     <span class="nav-label">Succès</span>
   </div>
-  <div class="nav-item" id="navSettings" onclick="openPanel('settings')">
+  <div class="nav-item" id="navSettings" onclick="navigate('#/settings')">
     <span class="nav-icon">⚙️</span>
     <span class="nav-label">Réglages</span>
   </div>
@@ -425,12 +376,144 @@
 </div>
 
 <script src="js/storage.js"></script>
-<script src="js/achievements.js"></script>
-<script src="js/sounds.js"></script>
-<script src="js/app.js"></script>
 
 <script>
-const MODULES_META = window.ChipMindApp.MODULES;
+function navigate(hash) { window.location.hash = hash; }
+
+/* ── Modules (anciennement js/app.js) ── */
+const MODULES_META = [
+  { id:1,  icon:'✖️',  name:'Tables Croupier',    sub:'×5 ×8 ×11 ×17 ×35',       suit:'♠', wide:false },
+  { id:2,  icon:'🔀',  name:'Tableau Mélangé',     sub:'Multiplicateurs désordre', suit:'♥', wide:false },
+  { id:3,  icon:'🃏',  name:'Comptage Cartes',      sub:'As→9 · Cumul 180',        suit:'♦', wide:true  },
+  { id:4,  icon:'⊞',  name:'Grilles de Calcul',    sub:'×2 ÷2 · Lignes / Cols',   suit:'♣', wide:false, comingSoon:true },
+  { id:5,  icon:'🎡',  name:'Paiements Roulette',   sub:'Plein · Cheval · Carré',  suit:'♠', wide:false },
+  { id:6,  icon:'👥',  name:'Multi-joueurs',        sub:'2–4 joueurs · Même tél.', suit:'♥', wide:false, comingSoon:true },
+  { id:7,  icon:'⏱️',  name:'Chrono 90 Secondes',   sub:'Mode entretien Cerus',    suit:'♦', wide:true,  comingSoon:true },
+  { id:8,  icon:'🔢',  name:'Suites Logiques',      sub:'+17 +35 ×8 …',            suit:'♣', wide:false, comingSoon:true },
+  { id:9,  icon:'🧠',  name:'Mémoire Séquence',     sub:'Mémoriser · Reproduire',  suit:'♠', wide:false, comingSoon:true },
+  { id:10, icon:'⚡',  name:'Additions en Cascade', sub:'Séries chrono',            suit:'♥', wide:false, comingSoon:true },
+];
+
+/* ── Toast ── */
+let _toastTimer;
+function showToast(msg, duration = 2500) {
+  let toast = document.getElementById('cm-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'cm-toast';
+    toast.style.cssText = 'position:fixed;top:16px;left:50%;z-index:8000;transform:translateX(-50%) translateY(calc(-100% - 24px));background:var(--felt-light);border:1px solid var(--gold);border-radius:99px;padding:10px 20px;font-family:var(--font-mono);font-size:0.7rem;color:var(--gold);letter-spacing:0.05em;box-shadow:var(--shadow-gold);pointer-events:none;white-space:nowrap;transition:transform 0.4s cubic-bezier(0.22,1,0.36,1)';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => {
+    toast.style.transform = 'translateX(-50%) translateY(calc(-100% - 24px))';
+  }, duration);
+}
+
+/* ── Formatage ── */
+function formatTime(ms) {
+  if (ms === null || ms === undefined) return '--:--';
+  const s = Math.floor(ms / 1000), m = Math.floor(s / 60), r = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`;
+}
+
+/* ── Succès (anciennement js/achievements.js) ── */
+const _ACH_CATALOGUE = [
+  { id:'first_session',      icon:'🎰', name:'Premier Jeton',          desc:'Complète ta première session d\'entraînement',                  tier:'bronze', check:(p)=>Object.values(p).some(m=>m.sessions>0) },
+  { id:'first_star',         icon:'⭐', name:'Étoile Naissante',        desc:'Obtiens ta première étoile dans un module',                     tier:'bronze', check:(p)=>Object.values(p).some(m=>m.stars>=1) },
+  { id:'first_perfect',      icon:'💎', name:'Sans Faute',              desc:'Obtiens 3 étoiles dans un module',                              tier:'silver', check:(p)=>Object.values(p).some(m=>m.stars===3) },
+  { id:'sessions_10',        icon:'🃏', name:'Habitué du Tapis',        desc:'10 sessions d\'entraînement',                                   tier:'bronze', check:(p)=>Object.values(p).reduce((s,m)=>s+m.sessions,0)>=10 },
+  { id:'sessions_50',        icon:'♠️', name:'Joueur Assidu',           desc:'50 sessions d\'entraînement',                                   tier:'silver', check:(p)=>Object.values(p).reduce((s,m)=>s+m.sessions,0)>=50 },
+  { id:'sessions_100',       icon:'👑', name:'Maître du Tapis',         desc:'100 sessions d\'entraînement',                                  tier:'gold',   check:(p)=>Object.values(p).reduce((s,m)=>s+m.sessions,0)>=100 },
+  { id:'unlock_3',           icon:'🔓', name:'Croupier Novice',         desc:'Débloque les modules 4, 5 et 6',                               tier:'bronze', check:(p)=>[4,5,6,7,8,9,10].filter(id=>p[id]?.unlocked).length>=3 },
+  { id:'unlock_all',         icon:'🗝️', name:'Toutes les Portes',       desc:'Débloque tous les modules',                                    tier:'gold',   check:(p)=>Object.values(p).every(m=>m.unlocked) },
+  { id:'stars_15',           icon:'🌟', name:'Bonne Étoile',            desc:'Cumule 15 étoiles au total',                                   tier:'silver', check:(p)=>Object.values(p).reduce((s,m)=>s+m.stars,0)>=15 },
+  { id:'royal_flush',        icon:'🏆', name:'Royal Flush',             desc:'3 étoiles sur tous les modules',                               tier:'gold',   check:(p)=>Object.values(p).every(m=>m.stars===3) },
+  { id:'m1_apprenti',        icon:'🎲', name:'Apprenti Calculateur',    desc:'100% en QCM · toutes les tables · 10 questions minimum',        tier:'bronze', module:1, check:(p,h)=>h.some(e=>e.moduleId===1&&e.mode==='qcm'&&e.allTables===true&&e.successRate===100&&(e.totalQuestions||0)>=10) },
+  { id:'m1_formule_verte',   icon:'📏', name:'La Formule Verte',        desc:'Obtenir 2 étoiles sur Tables Croupier',                        tier:'silver', module:1, check:(p)=>(p[1]?.stars||0)>=2 },
+  { id:'m1_reflexe_croupier',icon:'⚡', name:'Le Réflexe du Croupier',  desc:'Session parfaite · Saisie Libre · Expert · toutes tables · 25q · <5s/réponse', tier:'gold', module:1, check:(p,h)=>h.some(e=>e.moduleId===1&&e.mode==='libre'&&e.allTables===true&&e.level==='expert'&&e.successRate===100&&(e.totalQuestions||0)>=25&&e.timeMs>0&&(e.timeMs/(e.totalQuestions||25))<5000) },
+  { id:'m2_brasseur',        icon:'🔀', name:'Brasseur de Cartes',      desc:'100% en QCM · plage complète 1→20 · 5 lignes minimum',          tier:'bronze', module:2, check:(p,h)=>h.some(e=>e.moduleId===2&&e.mode==='qcm'&&e.minVal===1&&e.maxVal===20&&(e.rowsPlayed||0)>=5&&e.successRate===100) },
+  { id:'m2_marathon',        icon:'🏃', name:'Marathon Mélangé',        desc:'Saisie Libre · plage complète · 20 lignes · ≥85%',              tier:'silver', module:2, check:(p,h)=>h.some(e=>e.moduleId===2&&e.mode==='libre'&&e.minVal===1&&e.maxVal===20&&(e.rowsPlayed||0)>=20&&(e.successRate||0)>=85) },
+  { id:'m2_grand_melange',   icon:'🎰', name:'Le Grand Mélange',        desc:'Saisie Libre · Expert · plage complète · 20 lignes · 0 faute · <5s/cellule', tier:'gold', module:2, check:(p,h)=>h.some(e=>e.moduleId===2&&e.mode==='libre'&&e.level==='expert'&&e.minVal===1&&e.maxVal===20&&(e.rowsPlayed||0)>=20&&e.successRate===100&&e.timeMs>0&&(e.timeMs/((e.rowsPlayed||20)*5))<5000) },
+  { id:'m3_demi_jeu',        icon:'🎴', name:'Demi-Jeu',                desc:'Montée ou Descente (36 cartes) avec ≥85% de réussite',          tier:'bronze', module:3, check:(p,h)=>h.some(e=>e.moduleId===3&&(e.mode==='montee'||e.mode==='descente')&&(e.totalCards||0)>=36&&(e.successRate||0)>=85) },
+  { id:'m3_tour_complet',    icon:'🔄', name:'Tour Complet',            desc:'Aller-Retour (72 cartes) avec ≥90% de réussite · tout niveau',  tier:'silver', module:3, check:(p,h)=>h.some(e=>e.moduleId===3&&e.mode==='allerretour'&&(e.totalCards||0)>=72&&(e.successRate||0)>=90) },
+  { id:'m3_memoire_tapis',   icon:'⚡', name:'La Mémoire du Tapis',     desc:'Aller-Retour parfait · Expert · 0 faute · <5 minutes',          tier:'gold',   module:3, check:(p,h)=>h.some(e=>e.moduleId===3&&e.mode==='allerretour'&&e.level==='expert'&&(e.totalCards||0)>=72&&e.successRate===100&&e.timeMs>0&&e.timeMs<5*60*1000) },
+  { id:'m5_croupier',        icon:'🎰', name:'Le Croupier',             desc:'30 scénarios roulette au total · 0 faute · tous modes',          tier:'silver', module:5, check:(p,h)=>{ const e5=h.filter(e=>e.moduleId===5&&e.successRate===100); return e5.reduce((s,e)=>s+(e.totalQuestions||0),0)>=30; } },
+  { id:'m5_eclair',          icon:'⚡', name:'Éclair',                  desc:'Mode Expert · 10 scénarios · 0 faute · <8s/scénario en moyenne', tier:'gold',   module:5, check:(p,h)=>h.some(e=>e.moduleId===5&&e.mode==='expert'&&(e.totalQuestions||0)>=10&&e.successRate===100&&e.timeMs>0&&(e.timeMs/(e.totalQuestions||10))<8000) },
+  { id:'speed_demon',        icon:'⚡', name:'Speed Demon',             desc:'Complète le module Chrono 90s en mode Expert',                  tier:'gold',   check:(p)=>p[7]?.stars>=1 },
+  { id:'roulette_pro',       icon:'🎡', name:'Croupier Roulette',       desc:'3 étoiles sur Paiements Roulette',                              tier:'silver', check:(p)=>p[5]?.stars===3 },
+  { id:'night_owl',          icon:'🦉', name:'Hibou de Casino',         desc:'Entraîne-toi après minuit', tier:'secret', secret:true, check:()=>{ const h=new Date().getHours(); return h>=0&&h<5; } },
+  { id:'comeback',           icon:'🔄', name:'Le Retour',               desc:'Reviens après 7 jours d\'absence', tier:'secret', secret:true, check:(p,h)=>{ if(!h.length) return false; return (Date.now()-new Date(h[0].date).getTime())/(864e5)>=7; } },
+];
+
+const _ACH_TIERS = {
+  bronze: { color:'#cd7f32', label:'Bronze', glow:'rgba(205,127,50,0.4)'  },
+  silver: { color:'#c0c0c0', label:'Argent', glow:'rgba(192,192,192,0.4)' },
+  gold:   { color:'#c9a84c', label:'Or',     glow:'rgba(201,168,76,0.5)'  },
+  secret: { color:'#9b59b6', label:'Secret', glow:'rgba(155,89,182,0.4)'  },
+};
+
+function checkAll() {
+  const progress = window.ChipMindStorage.getProgress();
+  const history  = window.ChipMindStorage.getHistory();
+  const newlyUnlocked = [];
+  _ACH_CATALOGUE.forEach(ach => {
+    try {
+      if (ach.check(progress, history) && window.ChipMindStorage.unlockAchievement(ach.id))
+        newlyUnlocked.push(ach);
+    } catch (e) { console.warn('[ChipMind] Achievement check error:', ach.id, e); }
+  });
+  return newlyUnlocked;
+}
+
+function getCatalogueWithState() {
+  const unlocked = window.ChipMindStorage.getAchievements();
+  return _ACH_CATALOGUE.map(ach => ({
+    ...ach,
+    unlocked:   !!unlocked[ach.id],
+    unlockedAt: unlocked[ach.id]?.unlockedAt || null,
+    tier: _ACH_TIERS[ach.tier] ? { key: ach.tier, ..._ACH_TIERS[ach.tier] } : _ACH_TIERS.bronze,
+  }));
+}
+
+function showUnlockToast(ach) {
+  document.getElementById('ach-toast')?.remove();
+  const tier = _ACH_TIERS[typeof ach.tier === 'string' ? ach.tier : ach.tier.key] || _ACH_TIERS.bronze;
+  const el   = document.createElement('div');
+  el.id = 'ach-toast';
+  el.style.cssText = `position:fixed;top:64px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--felt-light);border:1px solid ${tier.color};border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 0 24px ${tier.glow},0 8px 32px rgba(0,0,0,0.5);z-index:9999;transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);max-width:300px;pointer-events:none`;
+  el.innerHTML = `<span style="font-size:1.6rem;filter:drop-shadow(0 0 8px ${tier.glow})">${ach.icon}</span><div><div style="font-family:var(--font-mono);font-size:0.5rem;text-transform:uppercase;letter-spacing:0.2em;color:${tier.color};margin-bottom:2px">Succès débloqué · ${tier.label}</div><div style="font-family:var(--font-serif);font-size:0.9rem;font-weight:700;color:var(--ivory)">${ach.name}</div><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--ivory-dim);margin-top:2px">${ach.desc}</div></div>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => { el.style.transform = 'translateX(-50%) translateY(0)'; });
+  setTimeout(() => { el.style.transform = 'translateX(-50%) translateY(-90px)'; setTimeout(() => el.remove(), 500); }, 3500);
+}
+
+/* ── Session runner (anciennement js/app.js) ── */
+function endSession({ moduleId, stars, successRate, timeMs, extra = {} }) {
+  const settings    = window.ChipMindStorage.getSettings();
+  const updatedProg = window.ChipMindStorage.updateModuleProgress(moduleId, { stars, successRate, time: timeMs });
+  const mod         = MODULES_META.find(m => m.id === moduleId);
+  window.ChipMindStorage.addHistoryEntry({
+    moduleId, moduleName: mod?.name || `Module ${moduleId}`,
+    stars, successRate, timeMs, level: settings.level, ...extra,
+  });
+  const newAch = checkAll();
+  newAch.forEach((ach, i) => {
+    setTimeout(() => showUnlockToast(ach),                    i * 4000);
+    setTimeout(() => window._soundPlay?.('achievement'), i * 4000 + 200);
+  });
+  if (stars > 0) setTimeout(() => window._soundPlay?.('levelUp'), 300);
+  return { updatedProg, newAchievements: newAch };
+}
+
+/* ── Compat globale pour les modules JS ── */
+window.ChipMindApp = { MODULES: MODULES_META, showToast, formatTime, endSession };
+window.ChipMindAchievements = {
+  CATALOGUE: _ACH_CATALOGUE, TIERS: _ACH_TIERS,
+  checkAll, getCatalogueWithState, showUnlockToast,
+};
 
 function renderModules() {
   const grid     = document.getElementById('modulesGrid');
@@ -471,7 +554,12 @@ function renderModules() {
         <div class="module-prog-bar"><div class="module-prog-fill" style="width:${prog}%"></div></div>
         ${overlayHtml}`;
     }
-    card.addEventListener('click', () => window.ChipMindApp.goToModule(mod.id));
+    card.addEventListener('click', () => {
+      if (comingSoon) { window.ChipMindApp.showToast('🚧 Module à venir — bientôt disponible !'); return; }
+      if (locked)     { window.ChipMindApp.showToast('🔒 Débloque les modules précédents d\'abord'); return; }
+      window._soundPlay?.('chipDrop');
+      navigate(`#/module/${String(mod.id).padStart(2,'0')}`);
+    });
     grid.appendChild(card);
   });
 }
@@ -480,8 +568,9 @@ function updateStats() {
   const stats    = window.ChipMindStorage.getGlobalStats();
   const settings = window.ChipMindStorage.getSettings();
   document.getElementById('statModules').textContent = `${stats.completedMods}/10`;
-  const levelLabels = { beginner:'Modules ≥★', intermediate:'Modules ≥★★', expert:'Modules ≥★★★' };
-  document.getElementById('statModulesLabel').textContent = levelLabels[settings.level] || 'Modules';
+  const levelNames = { beginner:'Déb', intermediate:'Int', expert:'Exp' };
+  const lname = levelNames[settings.level] || 'Déb';
+  document.getElementById('statModulesLabel').textContent = `3★ ${lname}.`;
   document.getElementById('statStars').textContent    = stats.totalStars;
   document.getElementById('statSessions').textContent = stats.totalSessions;
   document.getElementById('progressPct').textContent  = `${stats.progressPct}%`;
@@ -513,7 +602,7 @@ function closeAllPanels() {
 }
 
 function closePanelOnOverlay(e, name) {
-  if (e.target === document.getElementById(PANELS[name])) closeAllPanels();
+  if (e.target === document.getElementById(PANELS[name])) navigate('#/');
 }
 
 function renderAchievements() {
@@ -592,6 +681,7 @@ function renderAchievements() {
     ${moduleGroup(1,  'Tables Croupier',    '✖️')}
     ${moduleGroup(2,  'Tableau Mélangé',    '🔀')}
     ${moduleGroup(3,  'Comptage Cartes',    '🃏')}
+    ${moduleGroup(5,  'Paiements Roulette','🎡')}
     ${group('✧ Secrets', secrets, TIERS.secret.color)}
   `;
   setTimeout(() => { const f = document.getElementById('achFill'); if(f) f.style.width = pct+'%'; }, 100);
@@ -657,7 +747,7 @@ function onSliderInput(type, slider) {
   const key = type === 'sfx' ? 'soundVolume' : 'musicVolume';
   window.ChipMindStorage.updateSetting(key, vol);
   _syncSlider(type, vol);
-  window.ChipMindSounds?.onVolumeChange(type);
+  window._cmOnVolumeChange?.();
 }
 
 /* Bouton mute / dé-mute */
@@ -670,12 +760,12 @@ function toggleMute(type) {
     sessionStorage.setItem(ssKey, String(cur));
     window.ChipMindStorage.updateSetting(key, 0);
     _syncSlider(type, 0);
-    window.ChipMindSounds?.onVolumeChange(type);
+    window._cmOnVolumeChange?.();
   } else {
     const restored = parseInt(sessionStorage.getItem(ssKey) || (type==='sfx'?'50':'50'), 10);
     window.ChipMindStorage.updateSetting(key, restored);
     _syncSlider(type, restored);
-    window.ChipMindSounds?.onVolumeChange(type);
+    window._cmOnVolumeChange?.();
   }
 }
 function toggleSetting(key, el) {
@@ -709,7 +799,10 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
 }
 
+let _bgBuilt = false;
 function buildBackground() {
+  if (_bgBuilt) return;
+  _bgBuilt = true;
   const r = document.getElementById('bgRoulette');
   for (let i = 0; i < 36; i++) {
     const s = document.createElement('div');
@@ -731,27 +824,191 @@ function buildBackground() {
   setInterval(spawn, 2000);
 }
 
-document.getElementById('btnSettings').addEventListener('click', () => openPanel('settings'));
+function renderDashboard() {
+  document.getElementById('root').innerHTML = `
+    <header class="header">
+      <div>
+        <div class="logo-eyebrow">Casino Training</div>
+        <div class="logo-title">ChipMind</div>
+        <div class="logo-sub">L'école du croupier d'élite</div>
+      </div>
+      <span class="header-icon">🎰</span>
+      <button class="btn-settings" aria-label="Paramètres" onclick="navigate('#/settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </header>
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-}
+    <section class="progress-banner">
+      <div class="banner-top">
+        <span class="banner-label">Ta progression</span>
+        <div class="banner-level">
+          <div class="level-dot"></div>
+          <span id="currentLevel">Débutant</span>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-value" id="statModules">0/10</span>
+          <span class="stat-label" id="statModulesLabel">Modules</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="statStars">0</span>
+          <span class="stat-label">/ 90 étoiles</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="statSessions">0</span>
+          <span class="stat-label">Sessions</span>
+        </div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-meta">
+          <span>Progression globale</span>
+          <span class="pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </section>
 
-function init() {
-  buildBackground();
+    <div class="section-header">
+      <span class="section-suit">♠</span>
+      <h2 class="section-title">Modules d'entraînement</h2>
+      <div class="section-line"></div>
+      <span class="section-suit">♦</span>
+    </div>
+
+    <div class="modules-grid" id="modulesGrid"></div>
+  `;
   renderModules();
   updateStats();
-  window.ChipMindAchievements.checkAll();
-  window.ChipMindSounds?.preload();
-  window.ChipMindSounds?.initGlobalSounds();
-  window.ChipMindSounds?.switchContext('ambient');
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { renderModules(); updateStats(); }
+  if (document.visibilityState === 'visible' && document.getElementById('modulesGrid')) {
+    renderModules();
+    updateStats();
+  }
+});
+</script>
+
+
+<script type="module">
+import { init as appInit }  from './js/core/app.js';
+import { onRoute }          from './js/core/router.js';
+import { module as mod01 }  from './js/modules/module01.js';
+import { module as mod02 }  from './js/modules/module02.js';
+import { module as mod03 }  from './js/modules/module03.js';
+import { module as mod05 }  from './js/modules/module05.js';
+import { play, preload, setMusicContext } from './js/core/sound.js';
+
+window._soundPlay = play;
+
+const root = document.getElementById('root');
+let _initialized = false;
+
+const _nav = document.querySelector('.bottom-nav');
+function _renderDefaultNav() {
+  _nav.innerHTML = `
+    <div class="nav-item active" onclick="navigate('#/')">
+      <span class="nav-icon">🃏</span><span class="nav-label">Accueil</span>
+    </div>
+    <div class="nav-item" id="navHistory" onclick="navigate('#/history')">
+      <span class="nav-icon">📊</span><span class="nav-label">Historique</span>
+    </div>
+    <div class="nav-item" id="navAch" onclick="navigate('#/achievements')">
+      <span class="nav-icon">🏅</span><span class="nav-label">Succès</span>
+    </div>
+    <div class="nav-item" id="navSettings" onclick="navigate('#/settings')">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Réglages</span>
+    </div>`;
+  _nav.style.display = '';
+}
+window._bottomBar = {
+  show()         { _renderDefaultNav(); },
+  hide()         { _nav.style.display = 'none'; },
+  showLaunch(fn) {
+    _nav.innerHTML = `<button class="nav-action-btn" id="navActionBtn">Lancer ▶</button>`;
+    document.getElementById('navActionBtn').onclick = fn;
+    _nav.style.display = '';
+  },
+  showReplay(fn) {
+    _nav.innerHTML = `<button class="nav-action-btn" id="navActionBtn">↺ Rejouer</button>`;
+    document.getElementById('navActionBtn').onclick = fn;
+    _nav.style.display = '';
+  },
+};
+
+function _showDashboard() {
+  window._activeModuleCleanup?.();
+  window._bottomBar?.show();
+  closeAllPanels();
+  root.innerHTML = '';
+  renderDashboard();
+  window.scrollTo(0, 0);
+  setMusicContext('ambient');
+}
+
+function _showModule(mod) {
+  window._activeModuleCleanup?.();
+  closeAllPanels();
+  root.innerHTML = '';
+  mod.render(root);
+  window.scrollTo(0, 0);
+}
+
+onRoute('#/', () => {
+  if (_initialized) _showDashboard();
+});
+onRoute('#/history',      () => openPanel('history'));
+onRoute('#/achievements', () => openPanel('achievements'));
+onRoute('#/settings',     () => openPanel('settings'));
+
+onRoute('#/module/01', () => _showModule(mod01));
+onRoute('#/module/02', () => _showModule(mod02));
+onRoute('#/module/03', () => _showModule(mod03));
+onRoute('#/module/05', () => _showModule(mod05));
+
+/* Modules 04, 06-10 : pas encore migrés — redirige vers accueil */
+[4, 6, 7, 8, 9, 10].forEach(i => {
+  onRoute(`#/module/${String(i).padStart(2, '0')}`, () => navigate('#/'));
 });
 
-document.addEventListener('DOMContentLoaded', init);
+window._cmRefreshDashboard = () => {
+  if (document.getElementById('modulesGrid')) { renderModules(); updateStats(); }
+};
+
+await appInit();
+await window.ChipMindStorage.initAsync();
+_initialized = true;
+buildBackground();
+renderDashboard();
+window.scrollTo(0, 0);
+checkAll();
+preload();
+
+/* Son global sur les clics interface */
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('button,.mode-btn,.mode-card,.level-btn,.choice-btn,.module-card,.table-btn,[onclick]');
+  if (!target) return;
+  const gs = document.getElementById('screenGame');
+  if (gs?.classList.contains('active') && gs.contains(target)) return;
+  if (target.classList.contains('btn-back') || target.classList.contains('btn-home') ||
+      target.classList.contains('btn-abort') || target.getAttribute('data-snd') === 'back') return;
+  if (target.classList.contains('vol-mute-btn') || target.closest('.vol-row')) return;
+  play('chipDrop');
+}, { capture: true });
+
+/* Toast first-launch après migration étoiles v6 */
+if (sessionStorage.getItem('chipmind_stars_v6_migrated')) {
+  sessionStorage.removeItem('chipmind_stars_v6_migrated');
+  setTimeout(() => showToast('✦ Nouveau : 90 étoiles au total — ta progression débutant est conservée', 5000), 1200);
+}
 </script>
 
 </body>
