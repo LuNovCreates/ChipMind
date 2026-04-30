@@ -29,7 +29,7 @@ let _keydownHandler = null;
    CSS
 ════════════════════════════════════════════════════ */
 const _CSS = `
-.screen { display: none; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom, 16px); }
+.screen { display: none; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; height: 100dvh; overflow: hidden; padding-bottom: env(safe-area-inset-bottom, 16px); }
 .screen.active { display: flex; flex-direction: column; }
 #screenGame { height: 100dvh; min-height: unset; overflow: hidden; }
 
@@ -153,8 +153,10 @@ const _CSS = `
 .numpad-btn { padding: 9px 6px; border-radius: var(--radius-sm); background: linear-gradient(145deg, var(--felt-card), var(--felt-mid)); border: 1px solid rgba(201,168,76,0.12); cursor: pointer; font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--ivory); text-align: center; transition: all 0.12s var(--ease-spring); box-shadow: 0 3px 10px rgba(0,0,0,0.25); -webkit-tap-highlight-color: transparent; }
 .numpad-btn:active { transform: scale(0.93); }
 .numpad-btn.del { font-family: var(--font-mono); font-size: 1rem; color: var(--gold); }
-.numpad-btn.validate { grid-column: span 3; padding: 9px; background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); color: var(--felt-deep); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; font-family: var(--font-mono); border: none; box-shadow: 0 4px 16px var(--gold-glow); }
+.numpad-btn.validate { grid-column: span 3; padding: 14px; background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); color: var(--felt-deep); font-size: 1.05rem; font-weight: 700; font-family: var(--font-serif); border: none; box-shadow: 0 4px 18px var(--gold-glow); letter-spacing: 0.01em; border-radius: var(--radius); }
 .numpad-btn.validate:active { transform: scale(0.97); }
+
+.answer-zone { flex-shrink: 0; padding: 0 20px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; }
 
 .qcm-choices { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
 .choice-btn { padding: 12px 8px; border-radius: var(--radius-sm); background: linear-gradient(145deg, var(--felt-card), var(--felt-mid)); border: 1px solid var(--gold-border); cursor: pointer; font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--ivory); text-align: center; box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: all 0.18s var(--ease-spring); -webkit-tap-highlight-color: transparent; }
@@ -173,7 +175,7 @@ const _CSS = `
 .feedback-overlay.bad-fb { background: rgba(192,57,43,0.12); }
 .feedback-overlay.bad-fb .feedback-text { color: var(--red-light); }
 
-.results-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 20px 80px; gap: 18px; overflow-y: auto; }
+.results-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 20px 120px; gap: 18px; overflow-y: auto; }
 .result-stars { display: flex; gap: 12px; justify-content: center; margin: 10px 0; }
 .result-star { font-size: 3rem; filter: grayscale(1); opacity: 0.25; transition: all 0.4s var(--ease-spring); }
 .result-star.lit { filter: drop-shadow(0 0 14px var(--gold-glow)); color: var(--gold); opacity: 1; }
@@ -355,7 +357,9 @@ const _HTML = `
     </div>
 
     <div class="table-grid" id="tableGrid"></div>
+  </div>
 
+  <div class="answer-zone">
     <div id="inputZone" class="input-zone">
       <div class="input-display" id="inputDisplay">
         <span class="input-placeholder">———</span>
@@ -399,6 +403,7 @@ const _HTML = `
       <div class="errors-title">Erreurs à retravailler</div>
       <div id="errorsList"></div>
     </div>
+
   </div>
 </div>
 `;
@@ -933,7 +938,7 @@ function endGame() {
   window.ChipMindStorage?.updateModuleScore?.(2, settings.level ?? 'beginner', 'normal', rate);
 
   showScreen('screenResults');
-  window._bottomBar?.showReplay(() => window._m02?.replaySession());
+  window._bottomBar?.showEndGame(() => window._m02?.launchGame(), () => window._m02?.replaySession());
 
   const titles = {
     0: ['À retravailler',  'Continue à pratiquer le tableau mélangé !'],
@@ -1024,20 +1029,26 @@ function renderResultConditions(rows) {
 }
 
 function replaySession() {
-  window._bottomBar?.showLaunch(() => window._m02?.launchGame());
+  window._bottomBar?.showLaunch(() => window._m02?.launchGame(), 'Lancer la session 🔀');
   showScreen('screenConfig');
 }
 
 function confirmAbort() {
-  if (confirm('Abandonner la session ?')) {
-    stopTimer();
-    soundPlay('back');
-    setTimeout(() => {
-      setMusicContext('ambient');
-      showScreen('screenConfig');
-      window._bottomBar?.showLaunch(() => window._m02?.launchGame());
-    }, 120);
-  }
+  soundPlay('back');
+  window._showConfirmModal?.({
+    title: 'Abandonner ?',
+    message: 'Ta progression dans cette session sera perdue.',
+    cancelLabel:  'Continuer',
+    confirmLabel: 'Abandonner',
+    onConfirm: () => {
+      stopTimer();
+      setTimeout(() => {
+        setMusicContext('ambient');
+        window._bottomBar?.showLaunch(() => window._m02?.launchGame(), 'Lancer la session 🔀');
+        showScreen('screenConfig');
+      }, 120);
+    },
+  });
 }
 
 /* ════════════════════════════════════════════════════
@@ -1098,7 +1109,7 @@ export const module = {
       launchGame, confirmAbort, replaySession, goBack: _goBack,
     };
 
-    window._bottomBar?.showLaunch(() => window._m02?.launchGame());
+    window._bottomBar?.showLaunch(() => window._m02?.launchGame(), 'Lancer la session 🔀');
     setMusicContext('ambient');
   },
 

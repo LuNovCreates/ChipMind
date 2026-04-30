@@ -49,7 +49,8 @@ const _CSS = `
 ══════════════════════════════════════════════════════ */
 .screen {
   display: none; position: relative; z-index: 1;
-  max-width: 480px; margin: 0 auto; min-height: 100dvh;
+  max-width: 480px; margin: 0 auto;
+  height: 100dvh; overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 .screen.active { display: flex; flex-direction: column; }
@@ -417,14 +418,21 @@ const _CSS = `
 .numpad-btn:active { transform: scale(0.93); background: var(--felt-mid); }
 .numpad-btn.del { font-family: var(--font-mono); font-size: 1rem; color: var(--gold); }
 .numpad-btn.validate {
-  grid-column: span 3; padding: 11px;
+  grid-column: span 3; padding: 14px;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
-  color: var(--felt-deep); font-size: 0.68rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.15em;
-  font-family: var(--font-mono); border: none; box-shadow: 0 4px 16px var(--gold-glow);
+  color: var(--felt-deep); font-size: 1.05rem; font-weight: 700;
+  font-family: var(--font-serif); border: none;
+  box-shadow: 0 4px 18px var(--gold-glow); letter-spacing: 0.01em;
+  border-radius: var(--radius);
 }
 .numpad-btn.validate:active { transform: scale(0.97); }
 .numpad-btn.validate:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.answer-zone {
+  flex-shrink: 0;
+  padding: 0 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 10px;
+}
 
 .feedback-overlay {
   position: fixed; inset: 0; z-index: 500; pointer-events: none;
@@ -446,7 +454,7 @@ const _CSS = `
 ══════════════════════════════════════════════════════ */
 .results-body {
   flex: 1; display: flex; flex-direction: column;
-  align-items: center; padding: 0 20px 80px; gap: 18px; overflow-y: auto;
+  align-items: center; padding: 0 20px 120px; gap: 18px; overflow-y: auto;
 }
 .result-stars { display: flex; gap: 12px; justify-content: center; margin: 10px 0; }
 .result-star {
@@ -707,32 +715,38 @@ const _HTML = `
     </div>
 
     <div id="modeQCM" style="width:100%;display:none">
-      <div class="question-card" style="margin-bottom:14px">
+      <div class="question-card">
         <div class="card-corner tl" id="qcmCornerTL">♥</div>
         <div class="card-corner br" id="qcmCornerBR">♥</div>
         <div id="qcmQuestion" class="question-text"></div>
         <div class="question-mark">?</div>
       </div>
-      <div class="qcm-grid" id="qcmGrid"></div>
-      <div class="correct-hint" id="correctHint"></div>
     </div>
 
     <div id="modeLibre" style="width:100%;display:none">
-      <div class="question-card" style="margin-bottom:12px">
+      <div class="question-card">
         <div class="card-corner tl" id="libreCornerTL">♣</div>
         <div class="card-corner br" id="libreCornerBR">♣</div>
         <div id="libreQuestion" class="question-text"></div>
         <div class="question-mark">?</div>
       </div>
-      <div class="input-zone">
-        <div class="input-display" id="inputDisplay">
-          <span class="input-placeholder">———</span>
-        </div>
-        <div class="numpad" id="numpad"></div>
-      </div>
     </div>
 
   </div>
+
+  <div class="answer-zone">
+    <div id="answerQCM" style="display:none">
+      <div class="qcm-grid" id="qcmGrid"></div>
+      <div class="correct-hint" id="correctHint"></div>
+    </div>
+    <div id="answerLibre" class="input-zone" style="display:none">
+      <div class="input-display" id="inputDisplay">
+        <span class="input-placeholder">———</span>
+      </div>
+      <div class="numpad" id="numpad"></div>
+    </div>
+  </div>
+
 </div>
 
 <div class="screen" id="screenResults">
@@ -783,7 +797,6 @@ const _HTML = `
       <div class="errors-title">Erreurs à retravailler</div>
       <div id="errorsList"></div>
     </div>
-
 
   </div>
 </div>
@@ -1044,7 +1057,8 @@ function selfEval(knew) {
    QCM
 ════════════════════════════════════════════════════ */
 function renderQCM(q, qText) {
-  document.getElementById('modeQCM').style.display = 'block';
+  document.getElementById('modeQCM').style.display    = 'block';
+  document.getElementById('answerQCM').style.display  = 'block';
   document.getElementById('qcmQuestion').innerHTML = qText;
   document.getElementById('correctHint').classList.remove('show');
   const grid = document.getElementById('qcmGrid');
@@ -1104,7 +1118,8 @@ function generateChoices(correct, multiplier) {
    SAISIE LIBRE
 ════════════════════════════════════════════════════ */
 function renderLibre(q, qText) {
-  document.getElementById('modeLibre').style.display = 'block';
+  document.getElementById('modeLibre').style.display   = 'block';
+  document.getElementById('answerLibre').style.display = 'flex';
   document.getElementById('libreQuestion').innerHTML  = qText;
   updateInputDisplay();
   buildNumpad();
@@ -1245,22 +1260,28 @@ function nextQuestion() {
 }
 
 function hideAllModes() {
-  ['modeFlash', 'modeQCM', 'modeLibre'].forEach(id => {
+  ['modeFlash', 'modeQCM', 'modeLibre', 'answerQCM', 'answerLibre'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
 }
 
 function confirmAbort() {
-  if (confirm('Abandonner la session ?')) {
-    stopTimer();
-    soundPlay('back');
-    setTimeout(() => {
-      setMusicContext('ambient');
-      showScreen('screenConfig');
-      window._bottomBar?.showLaunch(() => window._m01?.launchGame());
-    }, 120);
-  }
+  soundPlay('back');
+  window._showConfirmModal?.({
+    title: 'Abandonner ?',
+    message: 'Ta progression dans cette session sera perdue.',
+    cancelLabel:  'Continuer',
+    confirmLabel: 'Abandonner',
+    onConfirm: () => {
+      stopTimer();
+      setTimeout(() => {
+        setMusicContext('ambient');
+        window._bottomBar?.showLaunch(() => window._m01?.launchGame(), 'Lancer la session ✖️');
+        showScreen('screenConfig');
+      }, 120);
+    },
+  });
 }
 
 /* ════════════════════════════════════════════════════
@@ -1303,7 +1324,7 @@ function endGame() {
   window.ChipMindStorage?.updateModuleScore?.(1, settings.level ?? 'beginner', cfg.mode, rate);
 
   showScreen('screenResults');
-  window._bottomBar?.showReplay(() => window._m01?.replaySession());
+  window._bottomBar?.showEndGame(() => window._m01?.launchGame(), () => window._m01?.replaySession());
 
   const titles = {
     0: ['À retravailler', 'Continue l\'entraînement, tu y es presque !'],
@@ -1385,7 +1406,7 @@ function renderResultConditions(totalQuestions) {
 }
 
 function replaySession() {
-  window._bottomBar?.showLaunch(() => window._m01?.launchGame());
+  window._bottomBar?.showLaunch(() => window._m01?.launchGame(), 'Lancer la session ✖️');
   showScreen('screenConfig');
 }
 
@@ -1448,7 +1469,7 @@ export const module = {
       flipCard, selfEval, replaySession, goBack: _goBack,
     };
 
-    window._bottomBar?.showLaunch(() => window._m01?.launchGame());
+    window._bottomBar?.showLaunch(() => window._m01?.launchGame(), 'Lancer la session ✖️');
     setMusicContext('ambient');
   },
 

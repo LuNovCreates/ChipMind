@@ -9,7 +9,7 @@ import { play as soundPlay, setMusicContext } from '../core/sound.js';
 
 /* ─── CSS ─── */
 const _CSS = `
-  .screen { display: none; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom, 16px); }
+  .screen { display: none; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; height: 100dvh; overflow: hidden; padding-bottom: env(safe-area-inset-bottom, 16px); }
   .screen.active { display: flex; flex-direction: column; }
   #screenGame { height: 100dvh; min-height: unset; overflow: hidden; }
   .bg-felt { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
@@ -47,9 +47,6 @@ const _CSS = `
   .level-badge { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .level-info-text { font-family: var(--font-mono); font-size: 0.55rem; color: var(--ivory-dim); line-height: 1.5; }
   .level-info-name { color: var(--gold); font-weight: 600; }
-  .btn-launch { margin: 20px 20px 24px; width: calc(100% - 40px); padding: 16px; background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); border: none; border-radius: var(--radius); font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--felt-deep); cursor: pointer; box-shadow: 0 4px 20px var(--gold-glow); transition: all 0.2s var(--ease-spring); }
-  .btn-launch:hover { transform: translateY(-2px); box-shadow: var(--shadow-gold); }
-  .btn-launch:active { transform: scale(0.97); }
   .game-status { display: flex; align-items: center; gap: 10px; padding: 36px 20px 8px; flex-shrink: 0; }
   .btn-abort { width: 38px; height: 38px; border-radius: 50%; background: var(--ivory-faint); border: 1px solid var(--gold-border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ivory-dim); font-size: 0.8rem; flex-shrink: 0; }
   .status-center { flex: 1; display: flex; flex-direction: column; gap: 4px; }
@@ -120,8 +117,9 @@ const _CSS = `
   .numpad-btn { padding: 8px 6px; border-radius: var(--radius-sm); background: linear-gradient(145deg, var(--felt-card), var(--felt-mid)); border: 1px solid rgba(201,168,76,0.12); cursor: pointer; font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--ivory); text-align: center; transition: all 0.12s var(--ease-spring); box-shadow: 0 3px 10px rgba(0,0,0,0.25); -webkit-tap-highlight-color: transparent; }
   .numpad-btn:active { transform: scale(0.93); }
   .numpad-btn.del { font-family: var(--font-mono); font-size: 1rem; color: var(--gold); }
-  .numpad-btn.validate { grid-column: span 3; padding: 9px; background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); color: var(--felt-deep); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; font-family: var(--font-mono); border: none; box-shadow: 0 4px 16px var(--gold-glow); }
+  .numpad-btn.validate { grid-column: span 3; padding: 14px; background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); color: var(--felt-deep); font-size: 1.05rem; font-weight: 700; font-family: var(--font-serif); border: none; box-shadow: 0 4px 18px var(--gold-glow); letter-spacing: 0.01em; border-radius: var(--radius); }
   .numpad-btn.validate:active { transform: scale(0.97); }
+  .answer-zone { flex-shrink: 0; padding: 0 20px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; }
   .phase-transition { position: fixed; inset: 0; z-index: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: rgba(10,46,26,0.95); opacity: 0; pointer-events: none; transition: opacity 0.4s; }
   .phase-transition.show { opacity: 1; pointer-events: all; }
   .phase-trans-icon { font-size: 4rem; filter: drop-shadow(0 0 20px var(--gold-glow)); animation: transIcon 1s ease-in-out infinite; }
@@ -138,7 +136,7 @@ const _CSS = `
   .feedback-overlay.ok-fb  .feedback-text { color: var(--green-light); }
   .feedback-overlay.bad-fb { background: rgba(192,57,43,0.12); }
   .feedback-overlay.bad-fb .feedback-text { color: var(--red-light); }
-  .results-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 20px 30px; gap: 18px; overflow-y: auto; }
+  .results-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 20px 120px; gap: 18px; overflow-y: auto; }
   .result-stars { display: flex; gap: 12px; justify-content: center; margin: 10px 0; }
   .result-star { font-size: 3rem; filter: grayscale(1); opacity: 0.25; transition: all 0.4s var(--ease-spring); }
   .result-star.lit { filter: drop-shadow(0 0 14px var(--gold-glow)); color: var(--gold); opacity: 1; }
@@ -174,11 +172,6 @@ const _CSS = `
   .error-q { font-family: var(--font-serif); font-size: 0.9rem; font-weight: 700; color: var(--ivory); flex: 1; }
   .error-your { font-family: var(--font-mono); font-size: 0.58rem; color: var(--red-light); text-decoration: line-through; }
   .error-correct { font-family: var(--font-mono); font-size: 0.65rem; color: var(--green-light); font-weight: 600; }
-  .result-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-  .btn-replay { width: 100%; padding: 15px; background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); border: none; border-radius: var(--radius); font-family: var(--font-serif); font-size: 1rem; font-weight: 700; color: var(--felt-deep); cursor: pointer; box-shadow: 0 4px 18px var(--gold-glow); transition: all 0.2s var(--ease-spring); }
-  .btn-replay:hover { transform: translateY(-2px); box-shadow: var(--shadow-gold); }
-  .btn-home { width: 100%; padding: 13px; background: var(--ivory-faint); border: 1px solid var(--gold-border); border-radius: var(--radius); font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold); cursor: pointer; transition: all 0.2s; }
-  .btn-home:hover { background: var(--gold-subtle); border-color: var(--gold); }
   @keyframes bounceIn { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.1);opacity:1} 100%{transform:scale(1)} }
   .bounce-in { animation: bounceIn 0.4s var(--ease-spring) both; }
   @keyframes totalTick { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
@@ -262,7 +255,6 @@ const _HTML = `
       </div>
     </div>
   </div>
-  <button class="btn-launch" onclick="window._m03?.launchGame()">Lancer la session 🃏</button>
 </div>
 
 <div class="screen" id="screenGame">
@@ -326,8 +318,10 @@ const _HTML = `
         <div class="card-phase-label" id="cardPhaseLabel">Additionne</div>
       </div>
     </div>
+  </div>
+
+  <div class="answer-zone">
     <div class="input-zone">
-      <div class="input-label" id="inputLabel">Entre le nouveau cumul</div>
       <div class="input-display" id="inputDisplay">
         <span class="input-placeholder">———</span>
       </div>
@@ -367,10 +361,6 @@ const _HTML = `
     <div class="errors-section" id="errorsSection" style="display:none">
       <div class="errors-title">Erreurs</div>
       <div id="errorsList"></div>
-    </div>
-    <div class="result-actions">
-      <button class="btn-replay" onclick="window._m03?.replaySession()">↺ Rejouer</button>
-      <button class="btn-home"   onclick="window._m03?.goBack()">← Dashboard</button>
     </div>
   </div>
 </div>
@@ -490,6 +480,7 @@ function launchGame() {
   state.isAnswered    = false;
   state.running       = cfg.mode === 'descente' ? TOTAL_DECK : 0;
   document.getElementById('usedCardsStrip').innerHTML = '';
+  window._bottomBar?.hide();
   showScreen('screenGame');
   setMusicContext('game');
   renderCard();
@@ -734,6 +725,7 @@ function endGame() {
   window.ChipMindStorage.updateModuleScore(3, settings.level, cfg.mode, rate);
 
   showScreen('screenResults');
+  window._bottomBar?.showEndGame(() => window._m03?.launchGame(), () => window._m03?.replaySession());
 
   const titles = {
     0: ['À retravailler',  "Continue l'entraînement au comptage !"],
@@ -816,13 +808,26 @@ function _renderResultConditions() {
 }
 
 /* ─── Utils ─── */
-function replaySession()  { showScreen('screenConfig'); }
-function confirmAbort()   {
-  if (confirm('Abandonner la session ?')) {
-    stopTimer();
-    soundPlay('back');
-    setTimeout(() => { setMusicContext('ambient'); showScreen('screenConfig'); }, 120);
-  }
+function replaySession()  {
+  window._bottomBar?.showLaunch(() => window._m03?.launchGame(), 'Lancer la session 🃏');
+  showScreen('screenConfig');
+}
+function confirmAbort() {
+  soundPlay('back');
+  window._showConfirmModal?.({
+    title: 'Abandonner ?',
+    message: 'Ta progression dans cette session sera perdue.',
+    cancelLabel:  'Continuer',
+    confirmLabel: 'Abandonner',
+    onConfirm: () => {
+      stopTimer();
+      setTimeout(() => {
+        setMusicContext('ambient');
+        window._bottomBar?.showLaunch(() => window._m03?.launchGame(), 'Lancer la session 🃏');
+        showScreen('screenConfig');
+      }, 120);
+    },
+  });
 }
 
 /* ─── Export ─── */
@@ -871,6 +876,7 @@ export const module = {
       goBack:            () => _goBack(),
     };
 
+    window._bottomBar?.showLaunch(() => window._m03?.launchGame(), 'Lancer la session 🃏');
     setMusicContext('ambient');
   },
 

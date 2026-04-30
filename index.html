@@ -132,7 +132,7 @@
     .module-prog-fill { height: 100%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--gold-dark), var(--gold)); box-shadow: 0 0 4px var(--gold-glow); }
 
     /* BOTTOM NAV */
-    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: linear-gradient(to top, rgba(7,31,18,0.99), rgba(10,46,26,0.94)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(201,168,76,0.13); display: flex; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: linear-gradient(to top, rgba(7,31,18,0.99), rgba(10,46,26,0.94)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(201,168,76,0.35); border-bottom: none; border-radius: 16px 16px 0 0; display: flex; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 100; }
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; cursor: pointer; transition: all 0.2s; position: relative; }
     .nav-item.active .nav-icon, .nav-item.active .nav-label { color: var(--gold); }
     .nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2px; background: var(--gold); border-radius: var(--radius-pill); box-shadow: 0 0 8px var(--gold-glow); }
@@ -152,6 +152,59 @@
     }
     .nav-action-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow-gold); }
     .nav-action-btn:active { transform: scale(0.97); }
+
+    .nav-action-btn-secondary {
+      width: 100%;
+      padding: 11px 24px; background: rgba(201,168,76,0.18);
+      border: 1px solid rgba(201,168,76,0.45); border-radius: var(--radius);
+      font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600;
+      color: var(--gold); cursor: pointer; letter-spacing: 0.05em;
+      transition: all 0.2s var(--ease-spring);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-action-btn-secondary:hover  { background: rgba(201,168,76,0.28); }
+    .nav-action-btn-secondary:active { transform: scale(0.97); }
+
+    /* MODAL CONFIRM */
+    .cm-modal-card {
+      background: linear-gradient(160deg, #0f3022, #0a1f14);
+      border: 1px solid rgba(201,168,76,0.5); border-radius: var(--radius-lg);
+      padding: 32px 24px 24px; max-width: 320px; width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7); text-align: center;
+    }
+    .cm-modal-suit { font-size: 2rem; color: var(--gold); opacity: 0.35; margin-bottom: 12px; }
+    .cm-modal-title {
+      font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700;
+      color: var(--gold-light); margin-bottom: 10px;
+    }
+    .cm-modal-msg {
+      font-family: var(--font-body); font-size: 0.85rem; color: var(--ivory-dim);
+      line-height: 1.55; margin-bottom: 24px;
+    }
+    .cm-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+    .cm-modal-cancel {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+      border: none; border-radius: var(--radius);
+      font-family: var(--font-serif); font-size: 1rem; font-weight: 700;
+      color: var(--felt-deep); cursor: pointer; transition: all 0.2s;
+    }
+    .cm-modal-cancel:hover { filter: brightness(1.1); }
+    .cm-modal-confirm {
+      width: 100%; padding: 12px;
+      background: rgba(192,57,43,0.14); border: 1px solid rgba(192,57,43,0.35);
+      border-radius: var(--radius); font-family: var(--font-mono);
+      font-size: 0.8rem; font-weight: 600; color: #e07070;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .cm-modal-confirm:hover { background: rgba(192,57,43,0.24); }
+
+    .nav-end-game {
+      display: flex; flex-direction: column; width: 100%;
+      padding: 6px 20px calc(6px + env(safe-area-inset-bottom, 0px));
+      gap: 6px; box-sizing: border-box;
+    }
+    .nav-end-game .nav-action-btn { width: 100%; margin: 0; }
 
     /* PANNEAUX */
     .panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
@@ -386,7 +439,7 @@ const MODULES_META = [
   { id:2,  icon:'🔀',  name:'Tableau Mélangé',     sub:'Multiplicateurs désordre', suit:'♥', wide:false },
   { id:3,  icon:'🃏',  name:'Comptage Cartes',      sub:'As→9 · Cumul 180',        suit:'♦', wide:true  },
   { id:4,  icon:'⊞',  name:'Grilles de Calcul',    sub:'×2 ÷2 · Lignes / Cols',   suit:'♣', wide:false, comingSoon:true },
-  { id:5,  icon:'🎡',  name:'Paiements Roulette',   sub:'Plein · Cheval · Carré',  suit:'♠', wide:false },
+  { id:5,  icon:'🎡',  name:'Paiements Roulette',   sub:'Plein · Cheval · Carré',  suit:'♠', wide:false, comingSoon:true },
   { id:6,  icon:'👥',  name:'Multi-joueurs',        sub:'2–4 joueurs · Même tél.', suit:'♥', wide:false, comingSoon:true },
   { id:7,  icon:'⏱️',  name:'Chrono 90 Secondes',   sub:'Mode entretien Cerus',    suit:'♦', wide:true,  comingSoon:true },
   { id:8,  icon:'🔢',  name:'Suites Logiques',      sub:'+17 +35 ×8 …',            suit:'♣', wide:false, comingSoon:true },
@@ -813,6 +866,7 @@ function buildBackground() {
   const suits = ['♠','♥','♦','♣'];
   const bg    = document.querySelector('.bg-felt');
   function spawn() {
+    if (!window._onDashboard) return;
     const el = document.createElement('div');
     el.className = 'float-suit';
     el.textContent = suits[Math.floor(Math.random()*4)];
@@ -904,7 +958,6 @@ import { onRoute }          from './js/core/router.js';
 import { module as mod01 }  from './js/modules/module01.js';
 import { module as mod02 }  from './js/modules/module02.js';
 import { module as mod03 }  from './js/modules/module03.js';
-import { module as mod05 }  from './js/modules/module05.js';
 import { play, preload, setMusicContext } from './js/core/sound.js';
 
 window._soundPlay = play;
@@ -932,19 +985,50 @@ function _renderDefaultNav() {
 window._bottomBar = {
   show()         { _renderDefaultNav(); },
   hide()         { _nav.style.display = 'none'; },
-  showLaunch(fn) {
-    _nav.innerHTML = `<button class="nav-action-btn" id="navActionBtn">Lancer ▶</button>`;
+  showLaunch(fn, label = 'Lancer la session ▶') {
+    _nav.innerHTML = `<button class="nav-action-btn" id="navActionBtn">${label}</button>`;
     document.getElementById('navActionBtn').onclick = fn;
     _nav.style.display = '';
   },
-  showReplay(fn) {
-    _nav.innerHTML = `<button class="nav-action-btn" id="navActionBtn">↺ Rejouer</button>`;
+  showReplay(fn, label = '↻ Relancer') {
+    _nav.innerHTML = `<button class="nav-action-btn" id="navActionBtn">${label}</button>`;
     document.getElementById('navActionBtn').onclick = fn;
+    _nav.style.display = '';
+  },
+  showEndGame(replayFn, dashFn) {
+    _nav.innerHTML = `
+      <div class="nav-end-game">
+        <button class="nav-action-btn" id="navReplayBtn">↻ Relancer</button>
+        <button class="nav-action-btn-secondary" id="navDashBtn">← Dashboard</button>
+      </div>`;
+    document.getElementById('navReplayBtn').onclick = replayFn;
+    document.getElementById('navDashBtn').onclick   = dashFn;
     _nav.style.display = '';
   },
 };
 
+window._showConfirmModal = function({ title, message, confirmLabel = 'Confirmer', cancelLabel = 'Annuler', onConfirm, onCancel } = {}) {
+  document.getElementById('cmModal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'cmModal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.82);backdrop-filter:blur(6px);padding:20px;box-sizing:border-box';
+  overlay.innerHTML = `
+    <div class="cm-modal-card">
+      <div class="cm-modal-suit">♠</div>
+      <div class="cm-modal-title">${title}</div>
+      <div class="cm-modal-msg">${message}</div>
+      <div class="cm-modal-actions">
+        <button class="cm-modal-cancel" id="cmModalCancel">${cancelLabel}</button>
+        <button class="cm-modal-confirm" id="cmModalConfirm">${confirmLabel}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('cmModalCancel').onclick  = () => { overlay.remove(); onCancel?.(); };
+  document.getElementById('cmModalConfirm').onclick = () => { overlay.remove(); onConfirm?.(); };
+};
+
 function _showDashboard() {
+  window._onDashboard = true;
   window._activeModuleCleanup?.();
   window._bottomBar?.show();
   closeAllPanels();
@@ -955,6 +1039,8 @@ function _showDashboard() {
 }
 
 function _showModule(mod) {
+  window._onDashboard = false;
+  document.querySelectorAll('.float-suit').forEach(el => el.remove());
   window._activeModuleCleanup?.();
   closeAllPanels();
   root.innerHTML = '';
@@ -972,10 +1058,8 @@ onRoute('#/settings',     () => openPanel('settings'));
 onRoute('#/module/01', () => _showModule(mod01));
 onRoute('#/module/02', () => _showModule(mod02));
 onRoute('#/module/03', () => _showModule(mod03));
-onRoute('#/module/05', () => _showModule(mod05));
-
-/* Modules 04, 06-10 : pas encore migrés — redirige vers accueil */
-[4, 6, 7, 8, 9, 10].forEach(i => {
+/* Modules 04-10 (sauf 01-03) : pas encore migrés — redirige vers accueil */
+[4, 5, 6, 7, 8, 9, 10].forEach(i => {
   onRoute(`#/module/${String(i).padStart(2, '0')}`, () => navigate('#/'));
 });
 
@@ -987,8 +1071,7 @@ await appInit();
 await window.ChipMindStorage.initAsync();
 _initialized = true;
 buildBackground();
-renderDashboard();
-window.scrollTo(0, 0);
+_showDashboard();
 checkAll();
 preload();
 

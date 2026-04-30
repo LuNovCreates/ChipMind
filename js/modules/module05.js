@@ -29,7 +29,7 @@ let _keydownHandler = null;
    CSS
 ════════════════════════════════════════════════════ */
 const _CSS = `
-  .screen{display:none;position:relative;z-index:1;max-width:480px;margin:0 auto;min-height:100dvh;padding-bottom:env(safe-area-inset-bottom,16px)}
+  .screen{display:none;position:relative;z-index:1;max-width:480px;margin:0 auto;height:100dvh;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,16px)}
   .screen.active{display:flex;flex-direction:column}
   #m05game{height:100dvh;min-height:unset;overflow:hidden}
   .mod-header{display:flex;align-items:center;gap:12px;padding:48px 20px 16px}
@@ -138,8 +138,10 @@ const _CSS = `
   .error-q{flex:1;color:var(--ivory-dim)}
   .error-your{color:var(--red-light)}
   .error-correct{color:var(--green-light);font-weight:700}
-  .btn-replay{width:100%;padding:14px;background:var(--ivory-faint);border:1px solid var(--gold-border);border-radius:var(--radius);font-family:var(--font-serif);font-size:1rem;font-weight:700;color:var(--gold-light);cursor:pointer;transition:all 0.2s;margin-top:8px}
-  .btn-replay:hover{background:var(--gold-subtle)}
+  .btn-replay{width:100%;padding:14px;background:var(--gold);border:none;border-radius:var(--radius);font-family:var(--font-mono);font-size:0.85rem;font-weight:700;color:#0a1a0a;cursor:pointer;transition:all 0.2s;margin-top:8px}
+  .btn-replay:hover{background:var(--gold-light)}
+  .btn-dashboard{width:100%;padding:13px;background:rgba(201,168,76,0.18);border:1px solid rgba(201,168,76,0.4);border-radius:var(--radius);font-family:var(--font-mono);font-size:0.85rem;font-weight:600;color:var(--gold);cursor:pointer;transition:all 0.2s;margin-top:4px}
+  .btn-dashboard:hover{background:rgba(201,168,76,0.28)}
 `;
 
 /* ════════════════════════════════════════════════════
@@ -199,7 +201,7 @@ const _HTML = `
       </table>
     </div>
   </div>
-  <button class="btn-launch" onclick="window._m05?.startGame()">Lancer ▶</button>
+  <button class="btn-launch" onclick="window._m05?.startGame()">Lancer la session 🎡</button>
 </div>
 
 <!-- GAME -->
@@ -264,7 +266,8 @@ const _HTML = `
       <div class="errors-title">Erreurs à retravailler</div>
       <div id="m05rerrlist"></div>
     </div>
-    <button class="btn-replay" onclick="window._m05?.replay()">↺ Rejouer</button>
+    <button class="btn-replay" onclick="window._m05?.replay()">↻ Relancer</button>
+    <button class="btn-dashboard" onclick="window._m05?.goBack()">← Dashboard</button>
   </div>
 </div>
 `;
