@@ -26,5 +26,9 @@ build/
 # ── Netlify ──────────────────────────────────────
 .netlify/
 
-# Claude internal docs
+# ── Claude ───────────────────────────────────────
+.claude/
 CLAUDE.md
+
+# ── Autres ───────────────────────────────────────
+.gitignore
