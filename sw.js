@@ -4,7 +4,7 @@
    ⚠️  Incrémenter CACHE_NAME à chaque déploiement significatif
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'chipmind-v17';
+const CACHE_NAME = 'chipmind-v18';
 
 const CACHE_ASSETS = [
   '/',
@@ -22,6 +22,7 @@ const CACHE_ASSETS = [
   '/js/modules/module01.js',
   '/js/modules/module02.js',
   '/js/modules/module03.js',
+  '/js/modules/learningTables.js',
   '/js/storage.js',
   /* Polices auto-hébergées */
   '/assets/fonts/PlayfairDisplay-Normal.woff2',

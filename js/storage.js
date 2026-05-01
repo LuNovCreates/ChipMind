@@ -65,7 +65,13 @@ const Storage = (() => {
   }
 
   /* ── Cache mémoire ── */
-  let _data = { settings: null, progress: null, history: null, achievements: null };
+  let _data = { settings: null, progress: null, history: null, achievements: null, learningTables: null };
+
+  const LEARNING_KEYS = [
+    'school_2','school_3','school_4','school_5','school_6','school_7','school_8','school_9',
+    'casino_5','casino_8',
+    'casino_11a','casino_11b','casino_17a','casino_17b','casino_35a','casino_35b',
+  ];
 
   /* ── IndexedDB (partage la même DB que js/core/storage.js) ── */
   let _db = null;
@@ -102,10 +108,11 @@ const Storage = (() => {
   /* Persiste le cache → IDB (fire-and-forget) */
   function _persist() {
     _idbSet('legacy_state', {
-      settings:     _data.settings,
-      progress:     _data.progress,
-      history:      _data.history,
-      achievements: _data.achievements,
+      settings:       _data.settings,
+      progress:       _data.progress,
+      history:        _data.history,
+      achievements:   _data.achievements,
+      learningTables: _data.learningTables,
     }).catch(err => console.warn('[Storage] persist failed:', err));
   }
 
@@ -117,10 +124,11 @@ const Storage = (() => {
     try {
       const saved = await _idbGet('legacy_state');
       if (saved) {
-        _data.settings     = saved.settings     ?? null;
-        _data.progress     = saved.progress     ?? null;
-        _data.history      = saved.history      ?? null;
-        _data.achievements = saved.achievements ?? null;
+        _data.settings       = saved.settings       ?? null;
+        _data.progress       = saved.progress       ?? null;
+        _data.history        = saved.history        ?? null;
+        _data.achievements   = saved.achievements   ?? null;
+        _data.learningTables = saved.learningTables ?? null;
         return;
       }
     } catch {}
@@ -297,10 +305,44 @@ const Storage = (() => {
     };
   }
 
+  /* ── Academy des Tables ── */
+
+  function getLearningTables() {
+    const defaults = {};
+    LEARNING_KEYS.forEach(k => { defaults[k] = { stepsCompleted: Array(7).fill(false), mastered: false }; });
+    if (!_data.learningTables) return defaults;
+    const result = { ...defaults };
+    LEARNING_KEYS.forEach(k => {
+      if (_data.learningTables[k]) {
+        const sc = _data.learningTables[k].stepsCompleted;
+        const steps = Array.isArray(sc) ? sc.slice(0, 7) : Array(7).fill(false);
+        while (steps.length < 7) steps.push(false);
+        result[k] = { stepsCompleted: steps, mastered: steps.every(Boolean) };
+      }
+    });
+    return result;
+  }
+
+  function updateLearningStep(tableKey, stepIndex) {
+    const lt = getLearningTables();
+    if (!lt[tableKey]) return lt;
+    lt[tableKey].stepsCompleted[stepIndex] = true;
+    lt[tableKey].mastered = lt[tableKey].stepsCompleted.every(Boolean);
+    _data.learningTables = lt;
+    _persist();
+    return lt;
+  }
+
+  function getLearningBarPct() {
+    const lt = getLearningTables();
+    const mastered = LEARNING_KEYS.filter(k => lt[k]?.mastered).length;
+    return Math.round((mastered / LEARNING_KEYS.length) * 100);
+  }
+
   /* ── Réinitialisation complète ── */
 
   function resetAll() {
-    _data = { settings: null, progress: null, history: null, achievements: null };
+    _data = { settings: null, progress: null, history: null, achievements: null, learningTables: null };
     _db   = null;
     indexedDB.deleteDatabase('ChipMindDB');
     localStorage.clear();
@@ -317,6 +359,8 @@ const Storage = (() => {
     getModuleBarPct, getCompletedModsForLevel,
     getHistory, addHistoryEntry,
     getAchievements, unlockAchievement,
+    getLearningTables, updateLearningStep, getLearningBarPct,
+    LEARNING_KEYS,
     getGlobalStats,
     MODULE_MODES,
     resetAll,

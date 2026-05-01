@@ -78,10 +78,28 @@ export function play(category) {
       _sfxCache[category].preload = 'auto';
     }
     const a       = _sfxCache[category];
-    a.volume      = vol;
+    a.volume      = vol * 0.4;
     a.currentTime = 0;
     a.play().catch(() => {});
   } catch {}
+}
+
+/* ── Lifecycle : arrêt/reprise selon visibilité ── */
+function _isPWA() {
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+function _initLifecycle() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopMusic(true);
+    } else if (!_isPWA() && _activeCtx) {
+      /* Mode site (onglet navigateur) : reprendre la musique au retour sur l'onglet */
+      setMusicContext(_activeCtx);
+    }
+  });
+  window.addEventListener('blur', () => stopMusic(true));
+  /* window.focus : no-op — visibilitychange couvre déjà le retour sur l'onglet */
 }
 
 /* ── Préchargement + pont vers les sliders ── */
@@ -90,6 +108,7 @@ export function preload() {
   try {
     if ('audioSession' in navigator) navigator.audioSession.type = 'ambient';
   } catch {}
+  _initLifecycle();
   try {
     Object.entries(SFX_FILES).forEach(([cat, file]) => {
       if (!_sfxCache[cat]) {
@@ -161,15 +180,6 @@ export function onVolumeChange() {
       if (audio && !audio.paused) audio.volume = vol;
     });
 
-    /* Si un contexte est défini mais en pause, le redémarrer */
-    if (_activeCtx) {
-      const key   = _activeCtx === 'game' ? 'game' : 'ambient';
-      const audio = _music[key];
-      if (audio && audio.paused) {
-        audio.play().catch(() => {});
-        _fade(key, vol, 1000, null);
-      }
-    }
   } catch {}
 }
 

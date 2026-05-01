@@ -495,6 +495,9 @@ const _ACH_CATALOGUE = [
   { id:'m3_memoire_tapis',   icon:'⚡', name:'La Mémoire du Tapis',     desc:'Aller-Retour parfait · Expert · 0 faute · <5 minutes',          tier:'gold',   module:3, check:(p,h)=>h.some(e=>e.moduleId===3&&e.mode==='allerretour'&&e.level==='expert'&&(e.totalCards||0)>=72&&e.successRate===100&&e.timeMs>0&&e.timeMs<5*60*1000) },
   { id:'m5_croupier',        icon:'🎰', name:'Le Croupier',             desc:'30 scénarios roulette au total · 0 faute · tous modes',          tier:'silver', module:5, check:(p,h)=>{ const e5=h.filter(e=>e.moduleId===5&&e.successRate===100); return e5.reduce((s,e)=>s+(e.totalQuestions||0),0)>=30; } },
   { id:'m5_eclair',          icon:'⚡', name:'Éclair',                  desc:'Mode Expert · 10 scénarios · 0 faute · <8s/scénario en moyenne', tier:'gold',   module:5, check:(p,h)=>h.some(e=>e.moduleId===5&&e.mode==='expert'&&(e.totalQuestions||0)>=10&&e.successRate===100&&e.timeMs>0&&(e.timeMs/(e.totalQuestions||10))<8000) },
+  { id:'lt_bronze', icon:'🥉', name:'Élève Assidu',       desc:'Toutes les tables scolaires complétées jusqu\'à l\'étape 6',    tier:'bronze', module:'learning', check:()=>{ const lt=window.ChipMindStorage.getLearningTables(); const schoolKeys=['school_2','school_3','school_4','school_5','school_6','school_7','school_8','school_9']; return schoolKeys.every(k=>lt[k]?.stepsCompleted.slice(0,6).every(Boolean)); } },
+  { id:'lt_silver', icon:'🥈', name:'Tables Maîtrisées',   desc:'Toutes les tables scolaires entièrement maîtrisées (7 étapes)', tier:'silver', module:'learning', check:()=>{ const lt=window.ChipMindStorage.getLearningTables(); return ['school_2','school_3','school_4','school_5','school_6','school_7','school_8','school_9'].every(k=>lt[k]?.mastered); } },
+  { id:'lt_gold',   icon:'🥇', name:'Croupier Calculateur', desc:'Toutes les tables casino entièrement maîtrisées (7 étapes)',   tier:'gold',   module:'learning', check:()=>{ const lt=window.ChipMindStorage.getLearningTables(); return ['casino_5','casino_8','casino_11a','casino_11b','casino_17a','casino_17b','casino_35a','casino_35b'].every(k=>lt[k]?.mastered); } },
   { id:'speed_demon',        icon:'⚡', name:'Speed Demon',             desc:'Complète le module Chrono 90s en mode Expert',                  tier:'gold',   check:(p)=>p[7]?.stars>=1 },
   { id:'roulette_pro',       icon:'🎡', name:'Croupier Roulette',       desc:'3 étoiles sur Paiements Roulette',                              tier:'silver', check:(p)=>p[5]?.stars===3 },
   { id:'night_owl',          icon:'🦉', name:'Hibou de Casino',         desc:'Entraîne-toi après minuit', tier:'secret', secret:true, check:()=>{ const h=new Date().getHours(); return h>=0&&h<5; } },
@@ -735,6 +738,7 @@ function renderAchievements() {
     ${moduleGroup(2,  'Tableau Mélangé',    '🔀')}
     ${moduleGroup(3,  'Comptage Cartes',    '🃏')}
     ${moduleGroup(5,  'Paiements Roulette','🎡')}
+    ${moduleGroup('learning', 'Academy des Tables', '📚')}
     ${group('✧ Secrets', secrets, TIERS.secret.color)}
   `;
   setTimeout(() => { const f = document.getElementById('achFill'); if(f) f.style.width = pct+'%'; }, 100);
@@ -931,6 +935,14 @@ function renderDashboard() {
     </section>
 
     <div class="section-header">
+      <span class="section-suit">♦</span>
+      <h2 class="section-title">Apprentissage</h2>
+      <div class="section-line"></div>
+      <span class="section-suit">♠</span>
+    </div>
+    <div style="padding:0 20px 24px" id="academySection"></div>
+
+    <div class="section-header" style="margin-top:20px">
       <span class="section-suit">♠</span>
       <h2 class="section-title">Modules d'entraînement</h2>
       <div class="section-line"></div>
@@ -940,12 +952,30 @@ function renderDashboard() {
     <div class="modules-grid" id="modulesGrid"></div>
   `;
   renderModules();
+  renderAcademy();
   updateStats();
+}
+
+function renderAcademy() {
+  const sec = document.getElementById('academySection');
+  if (!sec) return;
+  const pct = window.ChipMindStorage.getLearningBarPct();
+  sec.innerHTML = `
+    <div class="module-card wide active-mod" data-suit="📚" style="cursor:pointer" onclick="navigate('#/module/learning')">
+      <span class="module-icon" style="font-size:2.3rem;margin-bottom:0;flex-shrink:0">📚</span>
+      <div class="module-info" style="flex:1">
+        <div class="module-name">Academy des Tables</div>
+        <div class="module-sub">16 tables · 7 étapes · École &amp; Casino</div>
+        <div class="module-prog-bar" style="margin-top:8px"><div class="module-prog-fill" style="width:${pct}%"></div></div>
+        <div style="font-family:var(--font-mono);font-size:0.46rem;color:var(--ivory-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.1em">${pct}% maîtrisé</div>
+      </div>
+    </div>`;
 }
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && document.getElementById('modulesGrid')) {
     renderModules();
+    renderAcademy();
     updateStats();
   }
 });
@@ -955,9 +985,10 @@ document.addEventListener('visibilitychange', () => {
 <script type="module">
 import { init as appInit }  from './js/core/app.js';
 import { onRoute }          from './js/core/router.js';
-import { module as mod01 }  from './js/modules/module01.js';
-import { module as mod02 }  from './js/modules/module02.js';
-import { module as mod03 }  from './js/modules/module03.js';
+import { module as mod01 }       from './js/modules/module01.js';
+import { module as mod02 }       from './js/modules/module02.js';
+import { module as mod03 }       from './js/modules/module03.js';
+import { module as modLearning } from './js/modules/learningTables.js';
 import { play, preload, setMusicContext } from './js/core/sound.js';
 
 window._soundPlay = play;
@@ -1055,16 +1086,17 @@ onRoute('#/history',      () => openPanel('history'));
 onRoute('#/achievements', () => openPanel('achievements'));
 onRoute('#/settings',     () => openPanel('settings'));
 
-onRoute('#/module/01', () => _showModule(mod01));
-onRoute('#/module/02', () => _showModule(mod02));
-onRoute('#/module/03', () => _showModule(mod03));
+onRoute('#/module/01',       () => _showModule(mod01));
+onRoute('#/module/02',       () => _showModule(mod02));
+onRoute('#/module/03',       () => _showModule(mod03));
+onRoute('#/module/learning', () => _showModule(modLearning));
 /* Modules 04-10 (sauf 01-03) : pas encore migrés — redirige vers accueil */
 [4, 5, 6, 7, 8, 9, 10].forEach(i => {
   onRoute(`#/module/${String(i).padStart(2, '0')}`, () => navigate('#/'));
 });
 
 window._cmRefreshDashboard = () => {
-  if (document.getElementById('modulesGrid')) { renderModules(); updateStats(); }
+  if (document.getElementById('modulesGrid')) { renderModules(); renderAcademy(); updateStats(); }
 };
 
 await appInit();

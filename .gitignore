@@ -25,3 +25,6 @@ build/
 
 # ── Netlify ──────────────────────────────────────
 .netlify/
+
+# Claude internal docs
+CLAUDE.md
