@@ -11,6 +11,7 @@
   <title>ChipMind</title>
 
   <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/modules.css" />
 
   <style>
     .bg-felt { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
@@ -99,7 +100,6 @@
     .lock-overlay { position: absolute; inset: 0; background: rgba(7,31,18,0.55); backdrop-filter: blur(1.5px); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
     .module-card.locked:hover .lock-overlay { opacity: 1; }
 
-    /* TODO: supprimer ce bloc quand tous les modules sont prêts */
     .module-card.coming-soon { cursor: default; opacity: 0.52; filter: grayscale(0.4); }
     .module-card.coming-soon:hover { transform: none; border-color: rgba(201,168,76,0.13); box-shadow: var(--shadow-card); }
     .module-card:not(.locked):not(.coming-soon):hover .module-icon { transform: scale(1.15) rotate(-4deg); }

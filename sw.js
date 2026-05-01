@@ -4,23 +4,24 @@
    ⚠️  Incrémenter CACHE_NAME à chaque déploiement significatif
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'chipmind-v16';
+const CACHE_NAME = 'chipmind-v17';
 
 const CACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/css/variables.css',
+  '/css/modules.css',
   '/js/core/app.js',
   '/js/core/router.js',
   '/js/core/state.js',
   '/js/core/storage.js',
   '/js/core/sound.js',
   '/js/core/migrate.js',
+  '/js/core/gameHelpers.js',
   '/js/modules/module01.js',
   '/js/modules/module02.js',
   '/js/modules/module03.js',
-  '/js/modules/module05.js',
   '/js/storage.js',
   /* Polices auto-hébergées */
   '/assets/fonts/PlayfairDisplay-Normal.woff2',
