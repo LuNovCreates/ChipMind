@@ -566,6 +566,7 @@ function startTimer() {
   fill.style.transition = 'none'; fill.style.width = '100%';
   text.textContent = totalS + 's';
   let remaining = totalS;
+  void fill.offsetWidth; /* force reflow — valide width:100% avant de lancer la transition */
   requestAnimationFrame(() => { fill.style.transition = `width ${totalS}s linear`; fill.style.width = '0%'; });
   state.timerInterval = setInterval(() => {
     remaining--;

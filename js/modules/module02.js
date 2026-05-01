@@ -742,6 +742,7 @@ function startTimer() {
   if (fill) { fill.style.transition = 'none'; fill.style.width = '100%'; }
   if (text) text.textContent = totalS + 's';
   let remaining = totalS;
+  if (fill) void fill.offsetWidth; /* force reflow — valide width:100% avant de lancer la transition */
   requestAnimationFrame(() => {
     if (fill) { fill.style.transition = `width ${totalS}s linear`; fill.style.width = '0%'; }
   });
