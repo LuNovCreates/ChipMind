@@ -20,7 +20,10 @@ const SFX_FILES = {
 const _sfxCache = {};
 const _music    = { ambient: null, game: null };
 const _timers   = { ambient: null, game: null };
-let   _activeCtx = null; // 'ambient' | 'game' | null
+let   _activeCtx    = null;  // 'ambient' | 'game' | null
+let   _externalAudio = false; // audio externe détecté comme actif
+let   _audioCtx      = null;  // AudioContext de monitoring (init lazy)
+let   _ctxReady      = false; // true après première transition vers 'running'
 
 /* Volume sources : toujours lire depuis window.ChipMindStorage (0-100) */
 function _sfxVol() {
@@ -67,12 +70,38 @@ function _fade(key, toVol, durationMs, then) {
   }, durationMs / steps);
 }
 
+/* ── Monitoring AudioContext : détection d'audio externe ── */
+function _initAudioContext() {
+  if (_audioCtx) return;
+  try {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    _audioCtx.resume().then(() => {
+      _ctxReady = true;
+      _audioCtx.addEventListener('statechange', () => {
+        const state = _audioCtx.state;
+        if ((state === 'interrupted' || state === 'suspended') && _ctxReady) {
+          if (!_externalAudio) {
+            _externalAudio = true;
+            stopMusic(true);
+          }
+        } else if (state === 'running' && _externalAudio) {
+          _externalAudio = false;
+          /* Audio externe terminé : relancer la musique si un contexte était actif */
+          if (_activeCtx && _musicVol() > 0) setMusicContext(_activeCtx);
+        }
+      });
+    }).catch(() => {});
+  } catch {}
+}
+
 /* ── SFX ── */
 export function play(category) {
   try {
+    _initAudioContext();
     const file = SFX_FILES[category];
     const vol  = _sfxVol();
     if (!file || vol === 0) return;
+    if (_externalAudio) return; /* audio externe actif : SFX muets */
     if (!_sfxCache[category]) {
       _sfxCache[category]         = new Audio(BASE + file);
       _sfxCache[category].preload = 'auto';
@@ -85,21 +114,17 @@ export function play(category) {
 }
 
 /* ── Lifecycle : arrêt/reprise selon visibilité ── */
-function _isPWA() {
-  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-}
-
 function _initLifecycle() {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopMusic(true);
-    } else if (!_isPWA() && _activeCtx) {
-      /* Mode site (onglet navigateur) : reprendre la musique au retour sur l'onglet */
+    } else if (_activeCtx) {
+      /* Retour sur l'app (site ou PWA) : setMusicContext garde interne si audio externe actif */
       setMusicContext(_activeCtx);
     }
   });
   window.addEventListener('blur', () => stopMusic(true));
-  /* window.focus : no-op — visibilitychange couvre déjà le retour sur l'onglet */
+  /* window.focus : no-op — visibilitychange couvre le retour sur l'onglet */
 }
 
 /* ── Préchargement + pont vers les sliders ── */
@@ -126,12 +151,13 @@ export function preload() {
 /* ── Bascule de contexte musical avec cross-fade ── */
 export function setMusicContext(context) {
   try {
+    _initAudioContext();
     const vol      = _musicVol();
     const key      = context === 'game' ? 'game' : 'ambient';
     const otherKey = key === 'game' ? 'ambient' : 'game';
 
-    /* Volume nul : tout couper */
-    if (vol === 0) { stopMusic(true); return; }
+    /* Volume nul ou audio externe actif : tout couper / ne pas démarrer */
+    if (vol === 0 || _externalAudio) { stopMusic(true); return; }
 
     const audio = _getAudio(key);
 
@@ -180,6 +206,15 @@ export function onVolumeChange() {
       if (audio && !audio.paused) audio.volume = vol;
     });
 
+    /* Unmute explicite : relancer la musique si elle était en pause et pas d'audio externe */
+    if (_activeCtx && !_externalAudio) {
+      const key   = _activeCtx === 'game' ? 'game' : 'ambient';
+      const audio = _music[key];
+      if (audio && audio.paused) {
+        audio.play().catch(() => {});
+        _fade(key, vol, 1000, null);
+      }
+    }
   } catch {}
 }
 
