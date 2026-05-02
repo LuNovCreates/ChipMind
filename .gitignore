@@ -26,6 +26,9 @@ build/
 # ── Netlify ──────────────────────────────────────
 .netlify/
 
+# ── Config locale (secrets Notion) ──────────────
+js/core/config.js
+
 # ── Claude ───────────────────────────────────────
 .claude/
 CLAUDE.md

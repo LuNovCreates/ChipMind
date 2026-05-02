@@ -1,13 +1,13 @@
 /* ════════════════════════════════════════════════════
    ChipMind — app.js (core)
-   Bootstrap : enregistrement SW, hydratation state,
-   démarrage du router.
+   Bootstrap : enregistrement SW, versioning/migration,
+   hydratation state, démarrage du router.
 ════════════════════════════════════════════════════ */
 
 import { hydrate, snapshot } from './state.js';
 import { get as dbGet, set as dbSet } from './storage.js';
 import { init as routerInit } from './router.js';
-import { cleanLegacyStorage } from './migrate.js';
+import { runMigrations } from './migrate.js';
 
 export async function init() {
   if ('serviceWorker' in navigator) {
@@ -18,7 +18,10 @@ export async function init() {
     });
   }
 
-  await cleanLegacyStorage();
+  /* Versioning : migration ou reset si nécessaire.
+     En cas de reset incompatible, _doReset() recharge la page
+     → cette ligne ne retourne jamais dans ce cas. */
+  const migration = await runMigrations();
 
   try {
     const saved = await dbGet('state');
@@ -28,6 +31,7 @@ export async function init() {
   }
 
   routerInit();
+  return migration;
 }
 
 /* Persiste le state courant dans IndexedDB */

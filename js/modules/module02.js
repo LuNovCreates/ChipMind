@@ -3,10 +3,11 @@
    Tableau Mélangé — SPA module
 ════════════════════════════════════════════════════ */
 
-import { navigate }                            from '../core/router.js';
-import { get }                                 from '../core/state.js';
-import { play as soundPlay, setMusicContext }  from '../core/sound.js';
-import { shuffleArray, formatTime }            from '../core/gameHelpers.js';
+import { navigate }                                      from '../core/router.js';
+import { get }                                           from '../core/state.js';
+import { play as soundPlay, setMusicContext }            from '../core/sound.js';
+import { shuffleArray, formatTime }                      from '../core/gameHelpers.js';
+import { calculateSessionScore }                         from '../core/scoring.js';
 
 const MULTIPLIERS = [5, 8, 11, 17, 35];
 const SUITS_MAP   = { 5: '♠', 8: '♥', 11: '♦', 17: '♣', 35: '♠' };
@@ -21,6 +22,7 @@ const state = {
   startTime: null, timerInterval: null, timerSeconds: 0,
   currentInput: '', isAnswered: false,
   phase: null, mainTarget: 0,
+  sessionQuestions: [], cellStartTime: null,
 };
 
 let _container      = null;
@@ -280,6 +282,9 @@ const _HTML = `
       <div class="rstat"><div class="rstat-value" id="rstatTime">—</div><div class="rstat-label">Temps</div></div>
       <div class="rstat"><div class="rstat-value" id="rstatRows">—</div><div class="rstat-label">Lignes</div></div>
     </div>
+    <div class="score-highlight-row" id="rstatPointsRow" style="display:none">
+      <span id="rstatPoints">—</span><span class="new-record-badge" id="rstatNewRecord" style="display:none"> ✦ Nouveau record !</span>
+    </div>
     <div class="result-conditions">
       <div class="result-cond-title">Conditions étoiles</div>
       <div class="result-cond-list" id="resultCondList"></div>
@@ -433,16 +438,18 @@ function launchGame() {
     });
   }
 
-  state.currentRow   = 0;
-  state.currentCell  = 0;
-  state.totalCorrect = 0;
-  state.totalWrong   = 0;
-  state.errors       = [];
-  state.phase        = 'main';
-  state.mainTarget   = cfg.rows;
-  state.startTime    = Date.now();
-  state.currentInput = '';
-  state.isAnswered   = false;
+  state.currentRow      = 0;
+  state.currentCell     = 0;
+  state.totalCorrect    = 0;
+  state.totalWrong      = 0;
+  state.errors          = [];
+  state.phase           = 'main';
+  state.mainTarget      = cfg.rows;
+  state.startTime       = Date.now();
+  state.currentInput    = '';
+  state.isAnswered      = false;
+  state.sessionQuestions = [];
+  state.cellStartTime   = null;
 
   window._bottomBar?.hide();
   showScreen('screenGame');
@@ -456,6 +463,7 @@ function launchGame() {
 function renderGameRow() {
   state.isAnswered   = false;
   state.currentInput = '';
+  state.cellStartTime = Date.now();
 
   const rowIdx = state.currentRow;
   const row    = state.rows[rowIdx];
@@ -633,6 +641,7 @@ function makeChoices(correct, multiplier) {
 function handleAnswer(entered, expected, mult, row) {
   const cellIdx   = state.currentCell;
   const isCorrect = entered === expected;
+  state.sessionQuestions.push({ correct: isCorrect, timeout: entered === null, timeMs: Date.now() - (state.cellStartTime ?? Date.now()) });
 
   row.answers[cellIdx] = entered;
   row.correct[cellIdx] = isCorrect;
@@ -697,7 +706,8 @@ function nextCell(row) {
       renderGameRow();
     }
   } else {
-    state.isAnswered = false;
+    state.isAnswered    = false;
+    state.cellStartTime = Date.now();
     const progEl = document.getElementById('multProgressText');
     if (progEl) progEl.textContent = `Cellule ${state.currentCell + 1}/5`;
     buildTableGrid(row);
@@ -809,6 +819,26 @@ function endGame() {
     extra: { mode: cfg.mode, rowsPlayed: mainRows, minVal: cfg.minVal, maxVal: cfg.maxVal },
   });
   window.ChipMindStorage?.updateModuleScore?.(2, settings.level ?? 'beginner', 'normal', rate);
+
+  /* Scoring ChipMind */
+  const rowEl    = document.getElementById('rstatPointsRow');
+  const pointsEl = document.getElementById('rstatPoints');
+  const recordEl = document.getElementById('rstatNewRecord');
+  if (state.sessionQuestions.length > 0 && rowEl) {
+    const rangeSize    = cfg.maxVal - cfg.minVal + 1;
+    const configFactor = rangeSize / 10;
+    const { score, maxCombo } = calculateSessionScore({
+      questions: state.sessionQuestions,
+      config: { mode: cfg.mode === 'libre' ? 'input' : 'qcm', configFactor, T_ref: 10000 },
+    });
+    rowEl.style.display  = 'block';
+    if (pointsEl) pointsEl.textContent = `Score : ${score} pts`;
+    window._cmProfileOps?.saveScore('module02', score, maxCombo)
+      .then(result => { if (result?.isNewRecord && recordEl) recordEl.style.display = 'inline'; })
+      .catch(() => {});
+  } else if (rowEl) {
+    rowEl.style.display = 'none';
+  }
 
   showScreen('screenResults');
   window._bottomBar?.showEndGame(() => window._m02?.launchGame(), () => window._m02?.replaySession());

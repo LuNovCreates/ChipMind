@@ -7,6 +7,7 @@ import { navigate }                                       from '../core/router.j
 import { get }                                            from '../core/state.js';
 import { play as soundPlay, setMusicContext }             from '../core/sound.js';
 import { shuffleArray, formatTime }  from '../core/gameHelpers.js';
+import { calculateSessionScore, TABLE_CONFIG_FACTORS }   from '../core/scoring.js';
 
 /* ── Data ── */
 const TABLES = [
@@ -36,6 +37,7 @@ const state = {
   questions: [], current: 0, correct: 0, wrong: 0, errors: [],
   startTime: null, timerInterval: null, timerSeconds: 0,
   isAnswered: false, currentInput: '', isFlipped: false,
+  sessionQuestions: [], questionStartTime: null,
 };
 
 let _container       = null;
@@ -465,6 +467,10 @@ const _HTML = `
       </div>
     </div>
 
+    <div class="score-highlight-row" id="rstatPointsRow" style="display:none">
+      <span id="rstatPoints">—</span><span class="new-record-badge" id="rstatNewRecord" style="display:none"> ✦ Nouveau record !</span>
+    </div>
+
     <div class="result-conditions">
       <div class="result-cond-title">Conditions étoiles</div>
       <div class="result-cond-list" id="resultCondList"></div>
@@ -621,17 +627,19 @@ function launchGame() {
   const settings   = window.ChipMindStorage?.getSettings?.() ?? {};
   const filteredQ  = ALL_QUESTIONS.filter(q => cfg.selectedTables.includes(q.multiplier));
   _pool.reset(filteredQ);
-  state.questions    = Array.from({ length: cfg.qty }, () => _pool.next());
-  state.phase        = 'main';
-  state.mainTarget   = cfg.qty;
-  state.current      = 0;
-  state.correct      = 0;
-  state.wrong        = 0;
-  state.errors       = [];
-  state.startTime    = Date.now();
-  state.isAnswered   = false;
-  state.currentInput = '';
-  state.isFlipped    = false;
+  state.questions       = Array.from({ length: cfg.qty }, () => _pool.next());
+  state.phase           = 'main';
+  state.mainTarget      = cfg.qty;
+  state.current         = 0;
+  state.correct         = 0;
+  state.wrong           = 0;
+  state.errors          = [];
+  state.startTime       = Date.now();
+  state.isAnswered      = false;
+  state.currentInput    = '';
+  state.isFlipped       = false;
+  state.sessionQuestions  = [];
+  state.questionStartTime = null;
 
   const timerMap   = { beginner: 0, intermediate: 30, expert: 10 };
   state.timerSeconds = timerMap[settings.level ?? 'beginner'] ?? 0;
@@ -646,9 +654,10 @@ function launchGame() {
    GAME — RENDER QUESTION
 ════════════════════════════════════════════════════ */
 function renderQuestion() {
-  state.isAnswered   = false;
-  state.isFlipped    = false;
-  state.currentInput = '';
+  state.isAnswered        = false;
+  state.isFlipped         = false;
+  state.currentInput      = '';
+  state.questionStartTime = Date.now();
 
   const q     = state.questions[state.current];
   const idx   = state.current;
@@ -741,6 +750,7 @@ function handleQCM(chosen, q, btn) {
   if (state.isAnswered) return;
   state.isAnswered = true;
   stopTimer();
+  state.sessionQuestions.push({ correct: chosen === q.answer, timeout: false, timeMs: Date.now() - (state.questionStartTime ?? Date.now()) });
   const allBtns = _container?.querySelectorAll('.qcm-btn') ?? [];
   if (chosen === q.answer) {
     btn.classList.add('correct');
@@ -835,6 +845,7 @@ function validateLibre() {
   stopTimer();
   const q = state.questions[state.current];
   const entered = parseInt(state.currentInput, 10);
+  state.sessionQuestions.push({ correct: entered === q.answer, timeout: false, timeMs: Date.now() - (state.questionStartTime ?? Date.now()) });
   const disp = document.getElementById('inputDisplay');
   if (entered === q.answer) {
     disp.classList.add('correct');
@@ -901,6 +912,7 @@ function timeOut() {
   if (state.isAnswered) return;
   state.isAnswered = true;
   const q = state.questions[state.current];
+  state.sessionQuestions.push({ correct: false, timeout: true, timeMs: state.timerSeconds * 1000 });
   state.wrong++;
   state.errors.push({ q, userAnswer: '⏱', correct: q.answer });
   _feedbackError();
@@ -988,6 +1000,25 @@ function endGame() {
   });
 
   window.ChipMindStorage?.updateModuleScore?.(1, settings.level ?? 'beginner', cfg.mode, rate);
+
+  /* Scoring ChipMind — flash card exclue */
+  const rowEl    = document.getElementById('rstatPointsRow');
+  const pointsEl = document.getElementById('rstatPoints');
+  const recordEl = document.getElementById('rstatNewRecord');
+  if (cfg.mode !== 'flashcard' && state.sessionQuestions.length > 0 && rowEl) {
+    const configFactor = TABLE_CONFIG_FACTORS[cfg.selectedTables.length] ?? 1.0;
+    const { score, maxCombo } = calculateSessionScore({
+      questions: state.sessionQuestions,
+      config: { mode: cfg.mode === 'libre' ? 'input' : 'qcm', configFactor, T_ref: 6000 },
+    });
+    rowEl.style.display  = 'block';
+    if (pointsEl) pointsEl.textContent = `Score : ${score} pts`;
+    window._cmProfileOps?.saveScore('module01', score, maxCombo)
+      .then(result => { if (result?.isNewRecord && recordEl) recordEl.style.display = 'inline'; })
+      .catch(() => {});
+  } else if (rowEl) {
+    rowEl.style.display = 'none';
+  }
 
   showScreen('screenResults');
   window._bottomBar?.showEndGame(() => window._m01?.launchGame(), () => window._m01?.replaySession());

@@ -64,6 +64,19 @@ export async function reset() {
   }
 }
 
+/* Efface uniquement les données (IDB + localStorage) — sans toucher les caches SW.
+   Utilisé par le système de versioning pour les resets d'incompatibilité. */
+export async function resetData() {
+  if (_db) { _db.close(); _db = null; }
+  await new Promise(resolve => {
+    const req = indexedDB.deleteDatabase(DB_NAME);
+    req.onsuccess = () => resolve();
+    req.onerror   = () => resolve();
+    req.onblocked = () => resolve();
+  });
+  localStorage.clear();
+}
+
 /* Objet façade pour l'API spec : db.get / db.set / db.delete / db.reset */
 export const db = { get, set, delete: remove, reset };
 export default db;

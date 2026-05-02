@@ -26,11 +26,19 @@ export function current() {
 
 function _dispatch() {
   const hash = window.location.hash || '#/';
-  const fn   = _routes.get(hash) ?? _routes.get('#/');
-  if (fn) {
-    _active = hash;
-    fn(hash);
+  let fn = _routes.get(hash);
+
+  if (!fn) {
+    for (const [pattern, handler] of _routes) {
+      if (pattern.endsWith('/*') && hash.startsWith(pattern.slice(0, -2))) {
+        fn = handler;
+        break;
+      }
+    }
   }
+
+  fn = fn ?? _routes.get('#/');
+  if (fn) { _active = hash; fn(hash); }
 }
 
 /* À appeler une seule fois au démarrage */

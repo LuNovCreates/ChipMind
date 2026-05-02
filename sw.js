@@ -4,7 +4,7 @@
    ⚠️  Incrémenter CACHE_NAME à chaque déploiement significatif
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'chipmind-v18';
+const CACHE_NAME = 'chipmind-v21';
 
 const CACHE_ASSETS = [
   '/',
@@ -19,6 +19,9 @@ const CACHE_ASSETS = [
   '/js/core/sound.js',
   '/js/core/migrate.js',
   '/js/core/gameHelpers.js',
+  '/js/core/scoring.js',
+  '/js/core/profile.js',
+  '/js/core/notion.js',
   '/js/modules/module01.js',
   '/js/modules/module02.js',
   '/js/modules/module03.js',

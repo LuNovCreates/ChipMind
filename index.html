@@ -304,6 +304,134 @@
       .module-card   { padding: 14px 11px 12px; }
     }
 
+    /* ── Création de profil (overlay plein écran) ── */
+    .pc-overlay {
+      position: fixed; inset: 0; z-index: 9000; overflow-y: auto;
+      background: var(--felt-deep);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 32px 28px;
+    }
+    .pc-logo  { font-size: 2.6rem; margin-bottom: 6px; }
+    .pc-title { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; color: var(--gold-light); text-align: center; margin-bottom: 4px; }
+    .pc-sub   { font-family: var(--font-elegant); font-style: italic; font-size: 0.78rem; color: var(--ivory-dim); text-align: center; margin-bottom: 28px; }
+    .pc-field-label { font-family: var(--font-mono); font-size: 0.52rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--gold); opacity: 0.8; margin-bottom: 8px; width: 100%; }
+    .pc-input-wrap { width: 100%; max-width: 340px; margin-bottom: 26px; }
+    .pc-input {
+      width: 100%; padding: 14px 16px; box-sizing: border-box;
+      background: var(--felt-card); border: 1px solid var(--gold-border);
+      border-radius: var(--radius); color: var(--ivory);
+      font-family: var(--font-serif); font-size: 1.1rem; text-align: center; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .pc-input:focus  { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+    .pc-input.invalid { border-color: var(--red); }
+    .pc-counter { font-family: var(--font-mono); font-size: 0.48rem; color: var(--ivory-dim); text-align: right; margin-top: 5px; letter-spacing: 0.05em; }
+    .pc-avatar-wrap { width: 100%; max-width: 340px; margin-bottom: 28px; }
+    .pc-avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .pc-avatar-item {
+      aspect-ratio: 1; border-radius: 50%; overflow: hidden; cursor: pointer;
+      border: 2px solid transparent; background: var(--felt-card);
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+      transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+    }
+    .pc-avatar-item img { width: 100%; height: 100%; object-fit: cover; }
+    .pc-avatar-item:hover   { transform: scale(1.06); border-color: var(--gold-border); }
+    .pc-avatar-item.selected { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+    .pc-btn {
+      width: 100%; max-width: 340px; padding: 15px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+      border: none; border-radius: var(--radius);
+      font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700;
+      color: var(--felt-deep); cursor: pointer; letter-spacing: 0.02em;
+      box-shadow: 0 4px 18px var(--gold-glow); transition: all 0.2s;
+    }
+    .pc-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+    .pc-btn:not(:disabled):hover { filter: brightness(1.08); transform: translateY(-2px); }
+
+    /* ── Écran Profil commun (joueur actif + lecture seule) ── */
+    .profile-body { flex: 1; overflow-y: auto; padding: 0 20px calc(80px + env(safe-area-inset-bottom, 0px)); }
+    .profile-hero { display: flex; flex-direction: column; align-items: center; padding: 20px 0 24px; gap: 10px; }
+    .profile-avatar-img {
+      width: 130px; height: 130px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--gold); box-shadow: 0 0 24px var(--gold-glow);
+      background: var(--felt-card);
+    }
+    .profile-username-display { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--gold-light); }
+    .profile-member-since { font-family: var(--font-mono); font-size: 0.47rem; color: var(--ivory-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+    .profile-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+    .pstat { background: var(--ivory-faint); border: 1px solid var(--gold-border); border-radius: var(--radius-sm); padding: 14px 8px; text-align: center; }
+    .pstat-value { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--gold-light); filter: drop-shadow(0 0 5px var(--gold-glow)); }
+    .pstat-label { font-family: var(--font-mono); font-size: 0.46rem; color: var(--ivory-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 3px; }
+    .profile-section-title {
+      font-family: var(--font-mono); font-size: 0.52rem; text-transform: uppercase;
+      letter-spacing: 0.18em; color: var(--gold); opacity: 0.75;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .profile-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--gold-border), transparent); }
+    .profile-top3-section { margin-bottom: 20px; }
+    .top3-entry { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--ivory-ghost); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 6px; }
+    .top3-rank  { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--gold); min-width: 24px; text-align: center; }
+    .top3-info  { flex: 1; }
+    .top3-score { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; color: var(--ivory); line-height: 1; }
+    .top3-meta  { font-family: var(--font-mono); font-size: 0.46rem; color: var(--ivory-dim); letter-spacing: 0.04em; margin-top: 2px; }
+    .top3-empty { font-family: var(--font-elegant); font-style: italic; font-size: 0.78rem; color: var(--ivory-dim); text-align: center; padding: 10px 0; }
+    .btn-edit-profile {
+      background: var(--ivory-faint); border: 1px solid var(--gold-border);
+      border-radius: var(--radius-pill); padding: 5px 12px;
+      font-family: var(--font-mono); font-size: 0.52rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--gold); cursor: pointer; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-edit-profile:hover { background: rgba(201,168,76,0.12); border-color: var(--gold); }
+
+    /* ── Édition profil ── */
+    .edit-input {
+      width: 100%; padding: 12px 14px; box-sizing: border-box;
+      background: var(--felt-card); border: 1px solid var(--gold-border);
+      border-radius: var(--radius); color: var(--ivory);
+      font-family: var(--font-serif); font-size: 1.05rem; text-align: center;
+      outline: none; margin-bottom: 6px; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .edit-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+    .edit-avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+    .edit-avatar-item {
+      aspect-ratio: 1; border-radius: 50%; overflow: hidden; cursor: pointer;
+      border: 2px solid transparent; background: var(--felt-card);
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .edit-avatar-item img { width: 100%; height: 100%; object-fit: cover; }
+    .edit-avatar-item:hover   { transform: scale(1.06); border-color: var(--gold-border); }
+    .edit-avatar-item.selected { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow); }
+
+    /* ── Classement ── */
+    .lb-tabs { display: flex; gap: 8px; padding: 0 20px 16px; flex-shrink: 0; }
+    .lb-tab {
+      flex: 1; padding: 8px 4px; border-radius: var(--radius-pill);
+      background: var(--ivory-faint); border: 1px solid var(--gold-border);
+      font-family: var(--font-mono); font-size: 0.5rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--ivory-dim); cursor: pointer;
+      transition: all 0.2s; text-align: center;
+    }
+    .lb-tab.active { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); }
+    .lb-content { flex: 1; overflow-y: auto; padding: 0 20px calc(80px + env(safe-area-inset-bottom, 0px)); }
+    .lb-status { display: flex; flex-direction: column; align-items: center; padding: 40px 0; font-family: var(--font-elegant); font-style: italic; font-size: 0.85rem; color: var(--ivory-dim); gap: 10px; }
+    .lb-entry {
+      display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+      border-radius: var(--radius-sm); background: var(--ivory-ghost);
+      border: 1px solid rgba(255,255,255,0.05); margin-bottom: 6px;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .lb-entry:hover  { background: rgba(201,168,76,0.05); border-color: var(--gold-border); }
+    .lb-entry.is-me  { background: rgba(201,168,76,0.07); border-color: var(--gold-border); }
+    .lb-rank         { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; color: var(--gold); min-width: 28px; text-align: center; }
+    .lb-rank.podium  { font-size: 1.2rem; filter: drop-shadow(0 0 4px var(--gold-glow)); }
+    .lb-avatar-sm    { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--gold-border); background: var(--felt-card); flex-shrink: 0; }
+    .lb-name         { flex: 1; font-family: var(--font-serif); font-size: 0.85rem; font-weight: 700; color: var(--ivory); }
+    .lb-entry.is-me .lb-name { color: var(--gold-light); }
+    .lb-score        { font-family: var(--font-mono); font-size: 0.6rem; color: var(--gold); letter-spacing: 0.04em; }
+    .lb-you-badge    { font-family: var(--font-mono); font-size: 0.4rem; background: rgba(201,168,76,0.12); border: 1px solid var(--gold-border); border-radius: var(--radius-pill); padding: 2px 6px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; flex-shrink: 0; }
+
   </style>
 </head>
 
@@ -327,6 +455,10 @@
   <div class="nav-item" id="navAch" onclick="navigate('#/achievements')">
     <span class="nav-icon">🏅</span>
     <span class="nav-label">Succès</span>
+  </div>
+  <div class="nav-item" id="navLeaderboard" onclick="navigate('#/leaderboard')">
+    <span class="nav-icon">🏆</span>
+    <span class="nav-label">Classement</span>
   </div>
   <div class="nav-item" id="navSettings" onclick="navigate('#/settings')">
     <span class="nav-icon">⚙️</span>
@@ -891,10 +1023,10 @@ function renderDashboard() {
         <div class="logo-sub">L'école du croupier d'élite</div>
       </div>
       <span class="header-icon">🎰</span>
-      <button class="btn-settings" aria-label="Paramètres" onclick="navigate('#/settings')">
+      <button class="btn-settings" id="btnProfileHeader" aria-label="Profil" onclick="navigate('#/profile')">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
         </svg>
       </button>
     </header>
@@ -990,6 +1122,10 @@ import { module as mod02 }       from './js/modules/module02.js';
 import { module as mod03 }       from './js/modules/module03.js';
 import { module as modLearning } from './js/modules/learningTables.js';
 import { play, preload, setMusicContext } from './js/core/sound.js';
+import { getProfile, createProfile, updateProfile, syncStats, updateTop3, updateBestCombo } from './js/core/profile.js';
+import { submitScore, flushQueue, fetchLeaderboard, fetchPlayerScores, setLeaderboardVisibility } from './js/core/notion.js';
+
+const AVATARS = ['01_chip','02_chance','03_ace','04_diamond','05_roulette','06_spade','07_heart','08_club','09_joker','10_lucky','11_stack','12_dealer_dee'];
 
 window._soundPlay = play;
 
@@ -997,18 +1133,22 @@ const root = document.getElementById('root');
 let _initialized = false;
 
 const _nav = document.querySelector('.bottom-nav');
-function _renderDefaultNav() {
+function _renderDefaultNav(activeHash) {
+  const a = activeHash || window.location.hash || '#/';
   _nav.innerHTML = `
-    <div class="nav-item active" onclick="navigate('#/')">
+    <div class="nav-item${a==='#/'?' active':''}" onclick="navigate('#/')">
       <span class="nav-icon">🃏</span><span class="nav-label">Accueil</span>
     </div>
-    <div class="nav-item" id="navHistory" onclick="navigate('#/history')">
+    <div class="nav-item${a==='#/history'?' active':''}" id="navHistory" onclick="navigate('#/history')">
       <span class="nav-icon">📊</span><span class="nav-label">Historique</span>
     </div>
-    <div class="nav-item" id="navAch" onclick="navigate('#/achievements')">
+    <div class="nav-item${a==='#/achievements'?' active':''}" id="navAch" onclick="navigate('#/achievements')">
       <span class="nav-icon">🏅</span><span class="nav-label">Succès</span>
     </div>
-    <div class="nav-item" id="navSettings" onclick="navigate('#/settings')">
+    <div class="nav-item${a==='#/leaderboard'?' active':''}" id="navLeaderboard" onclick="navigate('#/leaderboard')">
+      <span class="nav-icon">🏆</span><span class="nav-label">Classement</span>
+    </div>
+    <div class="nav-item${a==='#/settings'?' active':''}" id="navSettings" onclick="navigate('#/settings')">
       <span class="nav-icon">⚙️</span><span class="nav-label">Réglages</span>
     </div>`;
   _nav.style.display = '';
@@ -1079,12 +1219,421 @@ function _showModule(mod) {
   window.scrollTo(0, 0);
 }
 
+/* ════════════════════════════════════════════════════
+   CRÉATION DE PROFIL
+════════════════════════════════════════════════════ */
+function showProfileCreation() {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'pc-overlay';
+    overlay.id = 'pcOverlay';
+    let _selectedAvatar = AVATARS[0];
+
+    overlay.innerHTML = `
+      <div class="pc-logo">🎰</div>
+      <div class="pc-title">Bienvenue sur ChipMind</div>
+      <div class="pc-sub">Crée ton profil pour commencer l'entraînement</div>
+      <div class="pc-input-wrap">
+        <div class="pc-field-label">Ton nom</div>
+        <input type="text" class="pc-input" id="pcUsername"
+               placeholder="Ex: NovPlayer" maxlength="20" autocomplete="off" spellcheck="false">
+        <div class="pc-counter" id="pcCounter">0 / 20</div>
+      </div>
+      <div class="pc-avatar-wrap">
+        <div class="pc-field-label">Ton avatar</div>
+        <div class="pc-avatar-grid" id="pcAvatarGrid">
+          ${AVATARS.map((id, i) => `
+            <div class="pc-avatar-item${i === 0 ? ' selected' : ''}" data-avatar="${id}">
+              <img src="assets/avatars/${id}.png" alt="${id}"
+                   onerror="this.style.display='none';this.parentNode.innerHTML='👤'">
+            </div>`).join('')}
+        </div>
+      </div>
+      <button class="pc-btn" id="pcCreateBtn" disabled>Créer mon profil</button>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input   = overlay.querySelector('#pcUsername');
+    const btn     = overlay.querySelector('#pcCreateBtn');
+    const counter = overlay.querySelector('#pcCounter');
+
+    input.addEventListener('input', () => {
+      const len = input.value.trim().length;
+      counter.textContent = `${len} / 20`;
+      input.classList.toggle('invalid', len > 0 && len < 2);
+      btn.disabled = len < 2;
+    });
+
+    overlay.querySelectorAll('.pc-avatar-item').forEach(el => {
+      el.addEventListener('click', () => {
+        overlay.querySelectorAll('.pc-avatar-item').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        _selectedAvatar = el.dataset.avatar;
+      });
+    });
+
+    btn.addEventListener('click', async () => {
+      const username = input.value.trim();
+      if (username.length < 2) return;
+      btn.disabled = true;
+      btn.textContent = 'Création...';
+      await createProfile(username, _selectedAvatar);
+      overlay.remove();
+      resolve();
+    });
+
+    setTimeout(() => input.focus(), 200);
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   ÉCRAN PROFIL — JOUEUR ACTIF
+════════════════════════════════════════════════════ */
+let _profileState = null;
+
+async function _showProfile() {
+  window._onDashboard = false;
+  window._activeModuleCleanup?.();
+  closeAllPanels();
+  _profileState = await getProfile();
+  _renderProfileView(_profileState);
+  _renderDefaultNav('#/profile');
+  window.scrollTo(0, 0);
+  setMusicContext('ambient');
+}
+
+function _renderProfileView(profile) {
+  root.innerHTML = _buildProfileViewHTML(profile);
+  root.querySelector('#btnEditProfile')?.addEventListener('click', () => _renderProfileEdit(profile));
+}
+
+function _renderProfileEdit(profile) {
+  root.innerHTML = _buildProfileEditHTML(profile);
+  const input  = root.querySelector('#editUsername');
+  const saveBtn = root.querySelector('#btnSaveProfile');
+
+  input?.addEventListener('input', () => {
+    const len = input.value.trim().length;
+    saveBtn.disabled = len < 2 || len > 20;
+  });
+  if (input) saveBtn.disabled = input.value.trim().length < 2;
+
+  root.querySelectorAll('.edit-avatar-item').forEach(el => {
+    el.addEventListener('click', () => {
+      root.querySelectorAll('.edit-avatar-item').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+  });
+
+  root.querySelector('#btnCancelEdit')?.addEventListener('click', () => _renderProfileView(_profileState));
+
+  saveBtn?.addEventListener('click', async () => {
+    const username = input?.value.trim();
+    const avatarId = root.querySelector('.edit-avatar-item.selected')?.dataset.avatar;
+    if (!username || username.length < 2 || username.length > 20) {
+      showToast('Nom invalide — 2 à 20 caractères requis');
+      return;
+    }
+    saveBtn.disabled = true; saveBtn.textContent = '...';
+    _profileState = await updateProfile({ username, avatarId });
+    _renderProfileView(_profileState);
+    showToast('Profil mis à jour ✦');
+  });
+}
+
+function _buildProfileViewHTML(profile) {
+  const stats  = profile?.stats  || { totalSessions: 0, totalStars: 0, bestCombo: 0 };
+  const scores = profile?.bestScores || { module01: [], module02: [], module03: [] };
+  const progressPct = window.ChipMindStorage?.getGlobalStats?.()?.progressPct ?? 0;
+  const totalScore  = ['module01','module02','module03']
+    .reduce((sum, id) => sum + (scores[id]?.[0]?.score ?? 0), 0);
+  const medals = ['🥇','🥈','🥉'];
+  const modNames = { module01: 'Tables Croupier', module02: 'Table Mélangée', module03: 'Comptage Cartes' };
+
+  const top3HTML = modId => {
+    const entries = scores[modId] || [];
+    if (!entries.length) return `<div class="top3-empty">Aucun score enregistré</div>`;
+    return entries.map((e, i) => `
+      <div class="top3-entry">
+        <div class="top3-rank">${medals[i]}</div>
+        <div class="top3-info">
+          <div class="top3-score">${(e.score||0).toLocaleString('fr-FR')} pts</div>
+          <div class="top3-meta">${e.mode||''} · ${e.configLabel||''} · ${fmtDate(e.date)}</div>
+        </div>
+      </div>`).join('');
+  };
+
+  return `
+    <div style="display:flex;flex-direction:column;min-height:100dvh">
+      <div class="mod-header">
+        <button class="btn-back" onclick="navigate('#/')">←</button>
+        <div style="flex:1"><div class="header-title">Mon Profil</div></div>
+        <button class="btn-edit-profile" id="btnEditProfile">✎ Modifier</button>
+      </div>
+      <div class="profile-body">
+        <div class="profile-hero">
+          <img class="profile-avatar-img" src="assets/avatars/${profile?.avatarId||'01_chip'}.png"
+               onerror="this.style.display='none'" alt="avatar">
+          <div class="profile-username-display">${profile?.username||'—'}</div>
+          <div class="profile-member-since">${profile?.id||'—'}</div>
+        </div>
+        <div class="profile-stats-grid">
+          <div class="pstat"><div class="pstat-value">${progressPct}<span style="font-size:0.85rem;opacity:0.55">%</span></div><div class="pstat-label">Progression</div></div>
+          <div class="pstat"><div class="pstat-value">${stats.totalStars}<span style="font-size:0.85rem;opacity:0.55">/90</span></div><div class="pstat-label">Étoiles</div></div>
+          <div class="pstat"><div class="pstat-value" style="font-size:1.1rem">${totalScore.toLocaleString('fr-FR')}</div><div class="pstat-label">Score total</div></div>
+        </div>
+        ${['module01','module02','module03'].map(id => `
+          <div class="profile-top3-section">
+            <div class="profile-section-title">${modNames[id]}</div>
+            ${top3HTML(id)}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function _buildProfileEditHTML(profile) {
+  return `
+    <div style="display:flex;flex-direction:column;min-height:100dvh">
+      <div class="mod-header">
+        <button class="btn-edit-profile" id="btnCancelEdit">✕ Annuler</button>
+        <div class="header-title" style="flex:1;text-align:center">Modifier</div>
+        <button class="btn-edit-profile" id="btnSaveProfile"
+                style="background:rgba(201,168,76,0.15);border-color:var(--gold)" disabled>
+          ✓ Sauvegarder
+        </button>
+      </div>
+      <div class="profile-body">
+        <div class="profile-section-title" style="margin-bottom:10px">Nom</div>
+        <input type="text" class="edit-input" id="editUsername"
+               value="${profile?.username||''}" maxlength="20"
+               autocomplete="off" spellcheck="false" placeholder="2–20 caractères">
+        <div class="profile-section-title" style="margin:20px 0 10px">Avatar</div>
+        <div class="edit-avatar-grid">
+          ${AVATARS.map(id => `
+            <div class="edit-avatar-item${profile?.avatarId===id?' selected':''}" data-avatar="${id}">
+              <img src="assets/avatars/${id}.png" alt="${id}"
+                   onerror="this.style.display='none';this.parentNode.innerHTML='👤'"
+                   style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════════
+   ÉCRAN CLASSEMENT
+════════════════════════════════════════════════════ */
+const _lbCache = {};
+
+async function _showLeaderboard() {
+  window._onDashboard = false;
+  window._activeModuleCleanup?.();
+  closeAllPanels();
+  root.innerHTML = _buildLeaderboardShellHTML();
+  _renderDefaultNav('#/leaderboard');
+  window.scrollTo(0, 0);
+  setMusicContext('ambient');
+
+  const profile = await getProfile();
+  let lbVisible = profile?.leaderboardVisible !== false;
+
+  const toggle = root.querySelector('#lbVisToggle');
+  if (toggle) {
+    toggle.classList.toggle('on', lbVisible);
+    toggle.addEventListener('click', async () => {
+      lbVisible = !toggle.classList.contains('on');
+      toggle.classList.toggle('on', lbVisible);
+      await updateProfile({ leaderboardVisible: lbVisible });
+      if (profile?.id) setLeaderboardVisibility(profile.id, lbVisible).catch(() => {});
+      const activeModule = root.querySelector('.lb-tab.active')?.dataset.module ?? 'module01';
+      _lbShowContent(lbVisible, activeModule);
+    });
+  }
+
+  root.querySelectorAll('.lb-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      root.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      _lbShowContent(lbVisible, tab.dataset.module);
+    });
+  });
+
+  _lbShowContent(lbVisible, 'module01');
+}
+
+function _buildLeaderboardShellHTML() {
+  const labels = { module01:'Tables', module02:'Mélangé', module03:'Cartes' };
+  return `
+    <div style="display:flex;flex-direction:column;height:100dvh;overflow:hidden">
+      <div class="mod-header">
+        <button class="btn-back" onclick="navigate('#/')">←</button>
+        <div style="flex:1">
+          <div class="header-title">Classement</div>
+          <div class="header-sub">Mondial · 3 modules</div>
+        </div>
+      </div>
+      <div class="setting-row" style="padding:10px 16px;margin:0;flex-shrink:0;border-bottom:1px solid var(--ivory-faint)">
+        <div class="setting-info">
+          <span class="setting-name">Participer au classement</span>
+          <span class="setting-desc">Votre score est visible par les autres joueurs</span>
+        </div>
+        <div class="toggle" id="lbVisToggle"></div>
+      </div>
+      <div class="lb-tabs">
+        ${['module01','module02','module03'].map((id,i) => `
+          <button class="lb-tab${i===0?' active':''}" data-module="${id}">${labels[id]}</button>`).join('')}
+      </div>
+      <div class="lb-content" id="lbContent">
+        <div class="lb-status">⏳ Chargement...</div>
+      </div>
+    </div>`;
+}
+
+async function _loadLbModule(moduleId) {
+  const content = root.querySelector('#lbContent');
+  if (!content) return;
+
+  if (_lbCache[moduleId]) {
+    content.innerHTML = await _buildLbListHTML(_lbCache[moduleId]);
+    _attachLbClicks(content);
+    return;
+  }
+
+  content.innerHTML = `<div class="lb-status">⏳ Chargement...</div>`;
+
+  const entries = await fetchLeaderboard(moduleId);
+  if (!entries) {
+    content.innerHTML = `<div class="lb-status">📡 Hors ligne — classement indisponible</div>`;
+    return;
+  }
+
+  _lbCache[moduleId] = entries;
+  content.innerHTML = await _buildLbListHTML(entries);
+  _attachLbClicks(content);
+}
+
+async function _buildLbListHTML(entries) {
+  if (!entries.length) return `<div class="lb-status">Aucun joueur classé</div>`;
+  const profile = await getProfile();
+  const myId    = profile?.id ?? null;
+  const podium  = ['🥇','🥈','🥉'];
+  return entries.map((e, i) => {
+    const isMe = e.profileId === myId;
+    const rank = i < 3
+      ? `<span class="lb-rank podium">${podium[i]}</span>`
+      : `<span class="lb-rank">#${i+1}</span>`;
+    return `
+      <div class="lb-entry${isMe?' is-me':''}" data-pid="${e.profileId}">
+        ${rank}
+        <img class="lb-avatar-sm" src="assets/avatars/${e.avatarId||'01_chip'}.png"
+             onerror="this.src=''" alt="">
+        <div class="lb-name">${e.username}</div>
+        ${isMe ? '<div class="lb-you-badge">Toi</div>' : ''}
+        <div class="lb-score">${(e.score||0).toLocaleString('fr-FR')} pts</div>
+      </div>`;
+  }).join('');
+}
+
+function _attachLbClicks(container) {
+  container.querySelectorAll('.lb-entry').forEach(el => {
+    el.addEventListener('click', () => {
+      const pid = el.dataset.pid;
+      if (pid) navigate(`#/player/${pid}`);
+    });
+  });
+}
+
+function _lbShowContent(visible, moduleId) {
+  const content = root.querySelector('#lbContent');
+  if (!content) return;
+  if (!visible) {
+    content.innerHTML = `
+      <div class="lb-status" style="padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:12px">
+        <div style="font-size:2rem">🔒</div>
+        <div style="font-family:var(--font-mono);font-size:0.77rem;color:var(--ivory-dim);text-align:center;line-height:1.6">
+          Vous ne participez pas au classement.<br>Activez la participation pour voir les scores.
+        </div>
+      </div>`;
+    return;
+  }
+  _loadLbModule(moduleId);
+}
+
+/* ════════════════════════════════════════════════════
+   ÉCRAN PROFIL JOUEUR — LECTURE SEULE
+════════════════════════════════════════════════════ */
+async function _showPlayerProfile(hash) {
+  const profileId = hash.replace('#/player/', '');
+  if (!profileId) { navigate('#/leaderboard'); return; }
+
+  window._onDashboard = false;
+  window._activeModuleCleanup?.();
+  closeAllPanels();
+
+  root.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100dvh">
+      <div class="mod-header">
+        <button class="btn-back" onclick="navigate('#/leaderboard')">←</button>
+        <div class="header-title">Profil joueur</div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center">
+        <div style="font-family:var(--font-elegant);font-style:italic;color:var(--ivory-dim)">Chargement...</div>
+      </div>
+    </div>`;
+
+  _renderDefaultNav('#/leaderboard');
+  window.scrollTo(0, 0);
+
+  const scores  = await fetchPlayerScores(profileId);
+  const sample  = Object.values(scores)[0];
+  const username = sample?.username ?? '???';
+  const avatarId = sample?.avatarId ?? '01_chip';
+  const modNames = { module01:'Tables Croupier', module02:'Table Mélangée', module03:'Comptage Cartes' };
+
+  const scoreRow = modId => {
+    const s = scores[modId];
+    if (!s) return `<div class="top3-empty">Non classé</div>`;
+    return `
+      <div class="top3-entry">
+        <div class="top3-rank">🥇</div>
+        <div class="top3-info">
+          <div class="top3-score">${(s.score||0).toLocaleString('fr-FR')} pts</div>
+          <div class="top3-meta">${fmtDate(s.submittedAt)}</div>
+        </div>
+      </div>`;
+  };
+
+  root.innerHTML = `
+    <div style="display:flex;flex-direction:column;min-height:100dvh">
+      <div class="mod-header">
+        <button class="btn-back" onclick="navigate('#/leaderboard')">←</button>
+        <div class="header-title" style="flex:1">${username}</div>
+      </div>
+      <div class="profile-body">
+        <div class="profile-hero">
+          <img class="profile-avatar-img" src="assets/avatars/${avatarId}.png"
+               onerror="this.style.display='none'" alt="avatar">
+          <div class="profile-username-display">${username}</div>
+        </div>
+        ${['module01','module02','module03'].map(id => `
+          <div class="profile-top3-section">
+            <div class="profile-section-title">${modNames[id]}</div>
+            ${scoreRow(id)}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
 onRoute('#/', () => {
   if (_initialized) _showDashboard();
 });
 onRoute('#/history',      () => openPanel('history'));
 onRoute('#/achievements', () => openPanel('achievements'));
 onRoute('#/settings',     () => openPanel('settings'));
+onRoute('#/profile',      () => _showProfile());
+onRoute('#/leaderboard',  () => _showLeaderboard());
+onRoute('#/player/*',     (hash) => _showPlayerProfile(hash));
 
 onRoute('#/module/01',       () => _showModule(mod01));
 onRoute('#/module/02',       () => _showModule(mod02));
@@ -1099,8 +1648,29 @@ window._cmRefreshDashboard = () => {
   if (document.getElementById('modulesGrid')) { renderModules(); renderAcademy(); updateStats(); }
 };
 
-await appInit();
+window._cmProfileOps = {
+  async saveScore(moduleId, score, maxCombo) {
+    const profile = await getProfile();
+    if (!profile || score <= 0) return null;
+    const result = await updateTop3(moduleId, { score, date: Date.now() });
+    if (maxCombo > 0) await updateBestCombo(maxCombo);
+    const gs = window.ChipMindStorage?.getGlobalStats?.() ?? {};
+    await syncStats({ totalSessions: gs.totalSessions ?? 0, totalStars: gs.totalStars ?? 0 });
+    if (result?.isNewRecord) {
+      submitScore(profile.id, profile.username, profile.avatarId, moduleId, score).catch(() => {});
+    }
+    return result;
+  },
+};
+
+const _initResult = await appInit();
 await window.ChipMindStorage.initAsync();
+
+const _existingProfile = await getProfile();
+if (!_existingProfile) await showProfileCreation();
+
+flushQueue().catch(() => {});
+
 _initialized = true;
 buildBackground();
 _showDashboard();
@@ -1123,6 +1693,15 @@ document.addEventListener('click', (e) => {
 if (sessionStorage.getItem('chipmind_stars_v6_migrated')) {
   sessionStorage.removeItem('chipmind_stars_v6_migrated');
   setTimeout(() => showToast('✦ Nouveau : 90 étoiles au total — ta progression débutant est conservée', 5000), 1200);
+}
+
+/* Versioning — toasts post-boot */
+if (_initResult?.action === 'migrated') {
+  setTimeout(() => showToast(`✦ App mise à jour vers la v${_initResult.to}`, 4000), 1000);
+}
+if (localStorage.getItem('chipmind_reset_flag')) {
+  localStorage.removeItem('chipmind_reset_flag');
+  setTimeout(() => showToast('⚠️ Nouvelle version incompatible — données réinitialisées', 5000), 1000);
 }
 </script>
 

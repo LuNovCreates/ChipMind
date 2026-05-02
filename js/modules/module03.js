@@ -4,9 +4,10 @@
    Modes : montée | descente | aller-retour
 ════════════════════════════════════════════════════ */
 
-import { navigate }                          from '../core/router.js';
-import { play as soundPlay, setMusicContext } from '../core/sound.js';
-import { shuffleArray, formatTime }           from '../core/gameHelpers.js';
+import { navigate }                                    from '../core/router.js';
+import { play as soundPlay, setMusicContext }          from '../core/sound.js';
+import { shuffleArray, formatTime }                    from '../core/gameHelpers.js';
+import { calculateSessionScore }                       from '../core/scoring.js';
 
 /* ─── CSS spécifique module03 ─── */
 const _CSS = `
@@ -259,6 +260,9 @@ const _HTML = `
       <div class="rstat"><div class="rstat-value" id="rstatTime">—</div><div class="rstat-label">Temps</div></div>
       <div class="rstat"><div class="rstat-value" id="rstatCards">—</div><div class="rstat-label">Cartes</div></div>
     </div>
+    <div class="score-highlight-row" id="rstatPointsRow" style="display:none">
+      <span id="rstatPoints">—</span><span class="new-record-badge" id="rstatNewRecord" style="display:none"> ✦ Nouveau record !</span>
+    </div>
     <div class="result-conditions">
       <div class="result-cond-title">Conditions étoiles</div>
       <div class="result-cond-list" id="resultCondList"></div>
@@ -293,6 +297,7 @@ const state = {
   phase:'up', deck:[], deckDown:[], cardIndex:0, running:0,
   correct:0, wrong:0, errors:[], startTime:null,
   timerInterval:null, timerSeconds:0, currentInput:'', isAnswered:false, isFlipped:false,
+  sessionQuestions: [], cardStartTime: null,
 };
 
 /* ─── Module locals ─── */
@@ -364,18 +369,20 @@ function calcStarsModule3(errors, mode) {
 function launchGame() {
   const settings = _getSettings();
   const timerMap = { beginner:0, intermediate:30, expert:10 };
-  state.timerSeconds  = timerMap[settings.level] || 0;
-  state.phase         = 'up';
-  state.deck          = buildDeck();
-  state.deckDown      = cfg.mode === 'allerretour' ? buildDeck() : [];
-  state.cardIndex     = 0;
-  state.correct       = 0;
-  state.wrong         = 0;
-  state.errors        = [];
-  state.startTime     = Date.now();
-  state.currentInput  = '';
-  state.isAnswered    = false;
-  state.running       = cfg.mode === 'descente' ? TOTAL_DECK : 0;
+  state.timerSeconds     = timerMap[settings.level] || 0;
+  state.phase            = 'up';
+  state.deck             = buildDeck();
+  state.deckDown         = cfg.mode === 'allerretour' ? buildDeck() : [];
+  state.cardIndex        = 0;
+  state.correct          = 0;
+  state.wrong            = 0;
+  state.errors           = [];
+  state.startTime        = Date.now();
+  state.currentInput     = '';
+  state.isAnswered       = false;
+  state.running          = cfg.mode === 'descente' ? TOTAL_DECK : 0;
+  state.sessionQuestions = [];
+  state.cardStartTime    = null;
   document.getElementById('usedCardsStrip').innerHTML = '';
   window._bottomBar?.hide();
   showScreen('screenGame');
@@ -435,7 +442,8 @@ function _flipCard(card) {
     el.classList.remove('card-red','card-black'); el.classList.add(cc);
   });
   document.getElementById('playingCard').classList.add('flipped');
-  state.isFlipped = true;
+  state.isFlipped   = true;
+  state.cardStartTime = Date.now();
 }
 
 /* ─── Running total ─── */
@@ -505,6 +513,7 @@ function validateAnswer() {
   const expected = isDown ? state.running - card.value : state.running + card.value;
   const entered  = parseInt(state.currentInput, 10);
   const isOk     = entered === expected;
+  state.sessionQuestions.push({ correct: isOk, timeout: false, timeMs: Date.now() - (state.cardStartTime ?? Date.now()) });
 
   const disp = document.getElementById('inputDisplay');
   disp.className = 'input-display ' + (isOk ? 'correct' : 'wrong');
@@ -581,6 +590,7 @@ function stopTimer() { clearInterval(state.timerInterval); }
 function timeOut() {
   if (state.isAnswered) return;
   state.isAnswered = true;
+  state.sessionQuestions.push({ correct: false, timeout: true, timeMs: state.timerSeconds * 1000 });
   const isDown   = state.phase === 'down';
   const deck     = isDown ? state.deckDown : state.deck;
   const card     = deck[state.cardIndex];
@@ -621,6 +631,24 @@ function endGame() {
     extra: { mode: cfg.mode, totalCards: total },
   });
   window.ChipMindStorage.updateModuleScore(3, settings.level, cfg.mode, rate);
+
+  /* Scoring ChipMind */
+  const rowEl    = document.getElementById('rstatPointsRow');
+  const pointsEl = document.getElementById('rstatPoints');
+  const recordEl = document.getElementById('rstatNewRecord');
+  if (state.sessionQuestions.length > 0 && rowEl) {
+    const { score, maxCombo } = calculateSessionScore({
+      questions: state.sessionQuestions,
+      config: { mode: 'input', configFactor: 1.0, T_ref: 8000 },
+    });
+    rowEl.style.display  = 'block';
+    if (pointsEl) pointsEl.textContent = `Score : ${score} pts`;
+    window._cmProfileOps?.saveScore('module03', score, maxCombo)
+      .then(result => { if (result?.isNewRecord && recordEl) recordEl.style.display = 'inline'; })
+      .catch(() => {});
+  } else if (rowEl) {
+    rowEl.style.display = 'none';
+  }
 
   showScreen('screenResults');
   window._bottomBar?.showEndGame(() => window._m03?.launchGame(), () => window._m03?.replaySession());

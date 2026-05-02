@@ -252,3 +252,7 @@
   80%     { transform: translateX(5px); }
 }
 .shake { animation: shakeCard 0.35s var(--ease-in-out); }
+
+/* ── Score de session (Phases 3+) ── */
+.score-highlight-row { text-align: center; padding: 4px 0 10px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--gold-light); letter-spacing: 0.05em; }
+.new-record-badge { color: var(--gold); font-weight: 700; margin-left: 6px; }

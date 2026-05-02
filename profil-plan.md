@@ -221,15 +221,17 @@ Conditions max : mode Input + config max + combo 20+ + vitesse ×2 + 0 erreur
 ### 3.2 Classement global (Notion)
 
 - **3 leaderboards séparés** dans Notion, un par module
+- Affiché sur l'écran dédié `#/leaderboard` (5ème onglet de la nav)
 - Envoi vers le leaderboard du module concerné après chaque session améliorant le score #1 du joueur pour ce module
 - Structure de l'entrée Notion :
 
 ```js
 {
-  profileId: "uid_1718000000000_ab3f2",
-  username: "NovPlayer",
-  moduleId: "module01",             // "module01" | "module02" | "module03"
-  score: 42500,                     // score #1 du joueur pour ce module
+  profileId:   "uid_1718000000000_ab3f2",
+  username:    "NovPlayer",
+  avatarId:    "avatar_03",             // nécessaire pour afficher l'avatar sur le profil lecture seule
+  moduleId:    "module01",             // "module01" | "module02" | "module03"
+  score:       42500,                  // score #1 du joueur pour ce module
   submittedAt: 1718000000000
 }
 ```
@@ -242,6 +244,14 @@ Conditions max : mode Input + config max + combo 20+ + vitesse ×2 + 0 erreur
 - Une seule entrée par `profileId + moduleId` dans chaque leaderboard (upsert)
 - La clé de dédoublonnage côté Notion est `profileId_moduleId`
 - Pas d'authentification utilisateur — le `profileId` suffit comme identifiant
+
+### 3.4 Profil joueur en lecture seule
+
+- Accessible depuis le classement en cliquant sur n'importe quelle entrée
+- Route : `#/player/<profileId>`
+- Données affichées : avatar + username + scores connus (issus des 3 leaderboards Notion)
+- **Identique visuellement** à l'écran `#/profile` mais **sans aucune option de modification**
+- Les stats locales (sessions, étoiles, bestCombo) ne sont **pas** disponibles pour les autres joueurs
 
 ---
 
@@ -278,19 +288,46 @@ Session terminée
             - Ratio précision + bonus
 ```
 
-### 4.3 Écran Profil
+### 4.3 Écran Profil (joueur actif)
 
 ```
-Onglet Profil (#/profile)
+Bouton profil en haut à droite du dashboard (#/profile)
   ├─ Avatar + Nom (bouton modifier)
   ├─ Stats globales (sessions, étoiles, meilleur combo)
-  ├─ Top 3 par module (3 sections distinctes : M01 / M02 / M03)
-  └─ Classement global par module (fetch Notion ×3, avec fallback "hors ligne")
+  └─ Top 3 par module (3 sections distinctes : M01 / M02 / M03)
+```
+
+### 4.4 Écran Classement
+
+```
+5ème onglet de la nav (#/leaderboard)
+  ├─ 3 sections : Module 01 / Module 02 / Module 03
+  ├─ Chaque section : liste des joueurs triés par score décroissant (fetch Notion)
+  ├─ Joueur actuel mis en évidence dans le classement
+  ├─ Fallback "hors ligne" si fetch échoue
+  └─ Clic sur un joueur → #/player/<profileId>
+```
+
+### 4.5 Écran Profil joueur (lecture seule)
+
+```
+Route #/player/<profileId>
+  ├─ Avatar + Nom (lecture seule — pas de bouton modifier)
+  ├─ Scores par module (issus des 3 leaderboards Notion)
+  └─ Bouton retour → #/leaderboard
 ```
 
 ---
 
 ## 5. CONTRAINTES TECHNIQUES
+
+### 5.0 Routing paramétré
+
+Le router actuel (`js/core/router.js`) utilise un matching exact. Il nécessite une extension minimale pour les routes avec paramètre :
+
+- Registrer les routes préfixées avec `/*` : `onRoute('#/player/*', fn)`
+- `_dispatch` tente d'abord un match exact, puis un match préfixe
+- L'ID joueur est extrait dans le handler : `hash.replace('#/player/', '')`
 
 ### 5.1 Stockage
 
@@ -398,20 +435,52 @@ export async function flushQueue() {
 
 ---
 
-## 6. FICHIERS À CRÉER
+## 6. FICHIERS À CRÉER / MODIFIER
+
+### Fichiers créés (nouveaux)
 
 | Fichier | Description |
 |---------|-------------|
-| `js/core/scoring.js` | Calcul score session (formule complète) |
-| `js/core/notion.js` | Envoi scores vers Notion + gestion queue offline |
-| `js/core/profile.js` | CRUD profil + logique top 3 |
-| `assets/avatars/` | Dossier images avatars locaux |
+| `js/core/scoring.js` | Calcul score session (formule complète) ✅ |
+| `js/core/notion.js` | Envoi scores vers Notion + gestion queue offline ✅ |
+| `js/core/profile.js` | CRUD profil + logique top 3 ✅ |
+| `js/core/config.example.js` | Template de configuration Notion ✅ |
+| `assets/avatars/` | Dossier images avatars locaux ✅ |
 
-Ces fichiers s'intègrent dans l'architecture existante de `js/core/` sans modifier les fichiers existants, sauf ajout d'imports dans `app.js` pour l'initialisation.
+### Fichiers modifiés (existants)
+
+| Fichier | Modification |
+|---------|-------------|
+| `js/core/router.js` | Ajout du support routes préfixées `/*` |
+| `js/core/app.js` | Appel `flushQueue` au boot + `showProfileCreation` si profil absent |
+| `index.html` | Écran création profil, route `#/profile`, 5ème onglet `#/leaderboard`, route `#/player/*`, bouton profil top-right, bridge `window._cmProfileOps` |
+| `js/modules/module01.js` | Intégration scoring + top 3 |
+| `js/modules/module02.js` | Intégration scoring + top 3 |
+| `js/modules/module03.js` | Intégration scoring + top 3 |
+| `sw.js` | Ajout nouveaux fichiers + incrément version |
+
+### Note sur `notion.js`
+
+`submitScore` doit accepter `avatarId` en paramètre supplémentaire pour que le profil lecture seule puisse afficher le bon avatar :
+```js
+submitScore(profileId, username, avatarId, moduleId, score)
+```
 
 ---
 
-## 7. POINTS D'ATTENTION POUR L'IMPLÉMENTATION
+## 7. NAVIGATION — RÉCAPITULATIF
+
+| Point d'accès | Route | Contenu | Modifiable |
+|---------------|-------|---------|------------|
+| Bouton top-right dashboard | `#/profile` | Profil joueur actif | Oui |
+| 5ème onglet nav | `#/leaderboard` | Classements M01/M02/M03 | Non |
+| Clic joueur dans classement | `#/player/<id>` | Profil joueur tiers | Non |
+
+Nav bottom (5 onglets) : Accueil · Historique · Succès · Classement · Réglages
+
+---
+
+## 8. POINTS D'ATTENTION POUR L'IMPLÉMENTATION
 
 - ⚠️ Pas de score global unique — `stats` ne contient pas de `totalScore`
 - ⚠️ Chaque module a son propre top 3 indépendant et son propre leaderboard Notion

@@ -1,8 +1,10 @@
 # ── ChipMind — Configuration Netlify ──────────────────────────
 
 [build]
-  # Dossier à déployer (racine du projet)
   publish = "."
+
+[functions]
+  directory = "netlify/functions"
 
 # ── Headers globaux ───────────────────────────────────────────
 
