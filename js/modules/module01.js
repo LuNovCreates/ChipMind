@@ -525,14 +525,12 @@ function _goBack() {
 ════════════════════════════════════════════════════ */
 function _feedbackCorrect() {
   soundPlay('correct');
-  const vibration = get('settings')?.vibration ?? true;
-  if (vibration && navigator.vibrate) navigator.vibrate(50);
+  if (window.ChipMindStorage?.getSettings?.()?.haptic !== false) navigator.vibrate?.(50);
 }
 
 function _feedbackError() {
   soundPlay('wrong');
-  const vibration = get('settings')?.vibration ?? true;
-  if (vibration && navigator.vibrate) navigator.vibrate([50, 30, 100]);
+  if (window.ChipMindStorage?.getSettings?.()?.haptic !== false) navigator.vibrate?.([50, 30, 100]);
 }
 
 function showScreen(id) {

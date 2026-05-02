@@ -5,7 +5,7 @@
    côté serveur — jamais exposés au client.
 
    Variables d'environnement requises (Netlify dashboard) :
-     NOTION_API_KEY  →  "Bearer secret_xxxxxxxxxxxx"
+     NOTION_API_KEY  →  "Bearer ntn_xxxxxxxxxxxx"
      NOTION_DB       →  ID de la database leaderboard
 ════════════════════════════════════════════════════ */
 

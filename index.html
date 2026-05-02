@@ -215,6 +215,14 @@
     .panel-handle { width: 40px; height: 4px; background: rgba(201,168,76,0.25); border-radius: var(--radius-pill); margin: 12px auto 20px; }
     .panel-title { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--gold-light); margin-bottom: 20px; }
 
+    /* ANIMATIONS DÉSACTIVÉES */
+    .no-animations *,
+    .no-animations *::before,
+    .no-animations *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+
     /* PARAMÈTRES */
     .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--ivory-faint); }
     .setting-info { display: flex; flex-direction: column; gap: 2px; }
@@ -904,6 +912,7 @@ function syncSettingsUI() {
   _syncSlider('music', s.musicVolume ?? 0);
   document.getElementById('toggleHaptic').classList.toggle('on', !!s.haptic);
   document.getElementById('toggleAnim').classList.toggle('on', !!s.animations);
+  document.documentElement.classList.toggle('no-animations', !s.animations);
   document.querySelectorAll('.level-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.level === s.level));
   const labels = { beginner:'Débutant', intermediate:'Intermédiaire', expert:'Expert' };
   document.getElementById('currentLevel').textContent = labels[s.level] || 'Débutant';
@@ -960,6 +969,7 @@ function toggleMute(type) {
 function toggleSetting(key, el) {
   const s = window.ChipMindStorage.updateSetting(key, !el.classList.contains('on'));
   el.classList.toggle('on', s[key]);
+  if (key === 'animations') document.documentElement.classList.toggle('no-animations', !s[key]);
   window.ChipMindApp.showToast(s[key] ? `${key} activé` : `${key} désactivé`);
 }
 

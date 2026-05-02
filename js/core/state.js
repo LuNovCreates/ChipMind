@@ -8,7 +8,6 @@ export const DEFAULT = {
     difficulty:  'beginner',
     soundVolume: 0.8,
     musicVolume: 0.5,
-    vibration:   true,
   },
   progress: {
     module01: {}, module02: {}, module03: {}, module04: {}, module05: {},
