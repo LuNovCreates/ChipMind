@@ -72,10 +72,7 @@ self.addEventListener('activate', event => {
       Promise.all(
         keys
           .filter(k => k !== CACHE_NAME)
-          .map(k => {
-            console.log(`[SW] Purge ancien cache : ${k}`);
-            return caches.delete(k);
-          })
+          .map(k => caches.delete(k))
       )
     )
   );
