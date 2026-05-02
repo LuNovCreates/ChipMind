@@ -1,46 +1,33 @@
 /* ════════════════════════════════════════════════════
    ChipMind — notion.js
    Envoi des scores via le proxy Netlify (notion-proxy).
-   La clé API Notion est exclusivement côté serveur.
+   Aucune clé ni DB ID côté client — tout est serveur.
 
-   Nécessite js/core/config.js (gitignorée) pour NOTION_DB.
-   En cas d'absence de config ou d'échec réseau :
+   En cas d'échec réseau :
      - silencieux côté UX
      - entrée mise en queue dans IndexedDB (notionQueue)
 ════════════════════════════════════════════════════ */
 
 import { get, set } from './storage.js';
 
-const QUEUE_KEY  = 'notionQueue';
-const PROXY_URL  = '/.netlify/functions/notion-proxy';
+const QUEUE_KEY = 'notionQueue';
+const PROXY_URL = '/.netlify/functions/notion-proxy';
 
-/* Chargement dynamique de config.js — gracieux si absente */
-let _cfg = null;
-async function _loadConfig() {
-  if (_cfg !== null) return _cfg;
-  try {
-    _cfg = await import('./config.js');
-  } catch {
-    console.info('[ChipMind] notion.js: config.js absent — classements globaux désactivés');
-    _cfg = {};
-  }
-  return _cfg;
-}
-
-/* Appel via le proxy Netlify — jamais directement l'API Notion */
-async function _notionFetch(path, method, body) {
+/* Appel via le proxy — jamais directement l'API Notion */
+async function _proxy(payload) {
   const res = await fetch(PROXY_URL, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ path, method, body }),
+    body:    JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Proxy error: ${res.status}`);
   return res.json();
 }
 
 /* Cherche la page d'un joueur pour un module spécifique */
-async function _findPage(dbId, profileId, moduleId) {
-  const data = await _notionFetch(`databases/${dbId}/query`, 'POST', {
+async function _findPage(profileId, moduleId) {
+  const data = await _proxy({
+    action: 'query',
     filter: {
       and: [
         { property: 'profileId', rich_text: { equals: profileId } },
@@ -63,20 +50,17 @@ function _buildProperties(profileId, username, avatarId, moduleId, score) {
   };
 }
 
-async function _upsert(cfg, { profileId, username, avatarId, moduleId, score }) {
-  const dbId = cfg.NOTION_DB;
-  if (!dbId) return;
-
+async function _upsert({ profileId, username, avatarId, moduleId, score }) {
   const props    = _buildProperties(profileId, username, avatarId, moduleId, score);
-  const existing = await _findPage(dbId, profileId, moduleId);
+  const existing = await _findPage(profileId, moduleId);
 
   if (existing) {
     /* Ne pas toucher à visible — le joueur peut avoir opt-out */
-    await _notionFetch(`pages/${existing.id}`, 'PATCH', { properties: props });
+    await _proxy({ action: 'update_page', pageId: existing.id, properties: props });
   } else {
     /* Première entrée : visible = true par défaut */
-    await _notionFetch('pages', 'POST', {
-      parent:     { database_id: dbId },
+    await _proxy({
+      action:     'create_page',
       properties: { ...props, visible: { checkbox: true } },
     });
   }
@@ -92,24 +76,18 @@ async function _enqueue(entry) {
 /* API publique ────────────────────────────────── */
 
 export async function submitScore(profileId, username, avatarId, moduleId, score) {
-  const entry = { profileId, username, avatarId, moduleId, score };
-  const cfg   = await _loadConfig();
-  if (!cfg.NOTION_DB) return;
-
   try {
-    await _upsert(cfg, entry);
+    await _upsert({ profileId, username, avatarId, moduleId, score });
   } catch {
-    await _enqueue(entry);
+    await _enqueue({ profileId, username, avatarId, moduleId, score });
   }
 }
 
 /* Retourne le classement d'un module (participants visibles, trié par score décroissant) */
 export async function fetchLeaderboard(moduleId) {
-  const cfg = await _loadConfig();
-  if (!cfg.NOTION_DB) return null;
-
   try {
-    const data = await _notionFetch(`databases/${cfg.NOTION_DB}/query`, 'POST', {
+    const data = await _proxy({
+      action: 'query',
       filter: {
         and: [
           { property: 'moduleId', rich_text: { equals: moduleId } },
@@ -132,11 +110,9 @@ export async function fetchLeaderboard(moduleId) {
 
 /* Retourne tous les scores d'un joueur (tous modules, table unique) */
 export async function fetchPlayerScores(profileId) {
-  const cfg = await _loadConfig();
-  if (!cfg.NOTION_DB) return {};
-
   try {
-    const data = await _notionFetch(`databases/${cfg.NOTION_DB}/query`, 'POST', {
+    const data = await _proxy({
+      action:    'query',
       filter:    { property: 'profileId', rich_text: { equals: profileId } },
       page_size: 10,
     });
@@ -158,16 +134,16 @@ export async function fetchPlayerScores(profileId) {
 
 /* Met à jour la visibilité du joueur dans le classement (toutes ses entrées) */
 export async function setLeaderboardVisibility(profileId, visible) {
-  const cfg = await _loadConfig();
-  if (!cfg.NOTION_DB) return;
-
   try {
-    const data = await _notionFetch(`databases/${cfg.NOTION_DB}/query`, 'POST', {
+    const data = await _proxy({
+      action:    'query',
       filter:    { property: 'profileId', rich_text: { equals: profileId } },
       page_size: 10,
     });
     await Promise.all(data.results.map(page =>
-      _notionFetch(`pages/${page.id}`, 'PATCH', {
+      _proxy({
+        action:     'update_page',
+        pageId:     page.id,
         properties: { visible: { checkbox: visible } },
       })
     ));
@@ -181,13 +157,10 @@ export async function flushQueue() {
   const queue = (await get(QUEUE_KEY)) ?? [];
   if (!queue.length) return;
 
-  const cfg = await _loadConfig();
-  if (!cfg.NOTION_DB) return;
-
   const remaining = [];
   for (const entry of queue) {
     try {
-      await _upsert(cfg, entry);
+      await _upsert(entry);
     } catch {
       remaining.push(entry);
     }

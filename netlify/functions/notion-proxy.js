@@ -1,29 +1,28 @@
 /* ════════════════════════════════════════════════════
    ChipMind — notion-proxy (Netlify Function)
    Proxy sécurisé vers l'API Notion.
-   La clé API ne transite jamais côté client.
+   NOTION_API_KEY et NOTION_DB restent exclusivement
+   côté serveur — jamais exposés au client.
 
-   Variable d'environnement requise (Netlify dashboard) :
+   Variables d'environnement requises (Netlify dashboard) :
      NOTION_API_KEY  →  "Bearer secret_xxxxxxxxxxxx"
+     NOTION_DB       →  ID de la database leaderboard
 ════════════════════════════════════════════════════ */
 
 const NOTION_VERSION = '2022-06-28';
 const NOTION_BASE    = 'https://api.notion.com/v1';
-
-/* Chemins autorisés — évite d'utiliser le proxy comme relay générique */
-const ALLOWED_PATH = /^(databases\/[a-fA-F0-9-]{32,36}\/query|pages\/[a-fA-F0-9-]{32,36}|pages)$/;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const apiKey = process.env.NOTION_API_KEY;
-  if (!apiKey) {
+  const { NOTION_API_KEY, NOTION_DB } = process.env;
+  if (!NOTION_API_KEY || !NOTION_DB) {
     return {
       statusCode: 503,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'NOTION_API_KEY non configurée' }),
+      body: JSON.stringify({ error: 'Notion non configuré (variables d\'environnement manquantes)' }),
     };
   }
 
@@ -34,24 +33,42 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Corps JSON invalide' };
   }
 
-  const { path, method = 'POST', body } = parsed;
-
-  if (!path || !ALLOWED_PATH.test(path)) {
-    return { statusCode: 400, body: `Chemin Notion non autorisé : ${path}` };
-  }
+  const headers = {
+    'Authorization':  NOTION_API_KEY,
+    'Content-Type':   'application/json',
+    'Notion-Version': NOTION_VERSION,
+  };
 
   try {
-    const res = await fetch(`${NOTION_BASE}/${path}`, {
-      method,
-      headers: {
-        'Authorization':  apiKey,
-        'Content-Type':   'application/json',
-        'Notion-Version': NOTION_VERSION,
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    let notionUrl, method, body;
 
+    switch (parsed.action) {
+      case 'query':
+        notionUrl = `${NOTION_BASE}/databases/${NOTION_DB}/query`;
+        method    = 'POST';
+        body      = { filter: parsed.filter, sorts: parsed.sorts, page_size: parsed.page_size };
+        break;
+
+      case 'create_page':
+        notionUrl = `${NOTION_BASE}/pages`;
+        method    = 'POST';
+        body      = { parent: { database_id: NOTION_DB }, properties: parsed.properties };
+        break;
+
+      case 'update_page':
+        if (!parsed.pageId) return { statusCode: 400, body: 'pageId manquant' };
+        notionUrl = `${NOTION_BASE}/pages/${parsed.pageId}`;
+        method    = 'PATCH';
+        body      = { properties: parsed.properties };
+        break;
+
+      default:
+        return { statusCode: 400, body: `Action inconnue : ${parsed.action}` };
+    }
+
+    const res  = await fetch(notionUrl, { method, headers, body: JSON.stringify(body) });
     const data = await res.json();
+
     return {
       statusCode: res.status,
       headers: { 'Content-Type': 'application/json' },
