@@ -2,26 +2,42 @@
 
 [build]
   publish = "."
+  # Si tu as une commande de build (npm run build), ajoute-la ici :
+  # command = "npm run build"
 
 [functions]
   directory = "netlify/functions"
 
+# ── Redirections SPA (CRUCIAL) ──────────────────────────────
+# Redirige toutes les routes vers l'index.html pour laisser la SPA gérer le routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ── Contextes de Déploiement ────────────────────────────────
+[context.production]
+  # Variables ou commandes spécifiques pour la v2 (main)
+  
+[context.deploy-preview]
+  # Configuration pour les previews (v3 quand tu feras une PR)
+  
+[context.branch-deploy]
+  # Configuration pour ta branche v3 actuelle
+
 # ── Headers globaux ───────────────────────────────────────────
 
-# Service Worker : autoriser le scope à la racine
 [[headers]]
   for = "/sw.js"
   [headers.values]
-    Cache-Control        = "no-cache"
+    Cache-Control = "no-cache"
     Service-Worker-Allowed = "/"
 
-# HTML : jamais mis en cache navigateur (toujours la version fraîche)
 [[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
-# JS / CSS : mis en cache 1 an (immutable — changer le nom si contenu change)
 [[headers]]
   for = "/js/*"
   [headers.values]
@@ -32,19 +48,16 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000"
 
-# Sons : mis en cache 1 an
 [[headers]]
   for = "/assets/sounds/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000"
 
-# Icônes : mis en cache 1 an
 [[headers]]
   for = "/assets/icons/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000"
 
-# Manifest : court cache (peut changer)
 [[headers]]
   for = "/manifest.json"
   [headers.values]
