@@ -40,6 +40,7 @@ const STEPS = [
 
 /* ─── CSS spécifique learningTables ─── */
 const _CSS = `
+.bg-felt::after { content: '📚'; position: absolute; bottom: -10px; right: -10px; font-size: 16rem; opacity: 0.025; line-height: 1; pointer-events: none; }
   .lt-home { flex: 1; overflow-y: auto; padding: 0 16px calc(80px + env(safe-area-inset-bottom, 0px)); }
   .lt-section-title { font-family: var(--font-mono); font-size: 0.52rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold); padding: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
   .lt-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--gold-border), transparent); }

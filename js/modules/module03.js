@@ -11,6 +11,7 @@ import { calculateSessionScore }                       from '../core/scoring.js'
 
 /* ─── CSS spécifique module03 ─── */
 const _CSS = `
+.bg-felt::after { content: '🃏'; position: absolute; bottom: -10px; right: -10px; font-size: 16rem; opacity: 0.025; line-height: 1; pointer-events: none; }
   .config-body { padding: 0 20px; flex: 1; overflow-y: auto; }
   .mode-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
   .mode-card { border-radius: var(--radius-sm); padding: 16px 8px 12px; background: var(--ivory-faint); border: 1px solid var(--gold-border); display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.22s var(--ease-spring); position: relative; }

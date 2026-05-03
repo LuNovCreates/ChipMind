@@ -48,7 +48,7 @@ let _keydownHandler  = null;
 ════════════════════════════════════════════════════ */
 const _CSS = `
 .bg-felt::after {
-  content: '♠'; position: absolute; bottom: -20px; right: -20px;
+  content: '✖️'; position: absolute; bottom: -20px; right: -20px;
   font-size: 18rem; color: var(--gold); opacity: 0.025; line-height: 1; pointer-events: none;
 }
 
