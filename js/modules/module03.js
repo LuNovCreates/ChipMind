@@ -410,13 +410,14 @@ function renderCard() {
 
   updateRunningDisplay(false);
 
+  const isDescending = isDown || cfg.mode === 'descente';
   const hint = document.getElementById('cardHint');
-  hint.textContent = isDown ? '−' : '+';
-  hint.className   = 'card-hint ' + (isDown ? 'minus' : 'plus');
+  hint.textContent = isDescending ? '−' : '+';
+  hint.className   = 'card-hint ' + (isDescending ? 'minus' : 'plus');
   document.getElementById('cardCountLabel').textContent  = `Carte ${state.cardIndex+1} / ${totalCards}`;
-  document.getElementById('cardPhaseLabel').textContent  = isDown ? 'Soustrais' : 'Additionne';
+  document.getElementById('cardPhaseLabel').textContent  = isDescending ? 'Soustrais' : 'Additionne';
   document.getElementById('rtTargetLabel').textContent   = 'Objectif';
-  document.getElementById('rtTargetVal').textContent     = isDown ? '0' : '180';
+  document.getElementById('rtTargetVal').textContent     = isDescending ? '0' : '180';
 
   document.getElementById('playingCard').classList.remove('flipped');
 
@@ -458,7 +459,7 @@ function updateRunningDisplay(animate) {
     el.classList.add(isDown ? 'tick-down' : 'tick-up');
     setTimeout(() => el.classList.remove('tick-up','tick-down'), 500);
   }
-  const target = state.phase === 'down' ? 0 : TOTAL_DECK;
+  const target = (state.phase === 'down' || cfg.mode === 'descente') ? 0 : TOTAL_DECK;
   const delta  = target - state.running;
   const dEl    = document.getElementById('rtDelta');
   if (!dEl) return;
@@ -511,7 +512,8 @@ function validateAnswer() {
   const isDown   = state.phase === 'down';
   const deck     = isDown ? state.deckDown : state.deck;
   const card     = deck[state.cardIndex];
-  const expected = isDown ? state.running - card.value : state.running + card.value;
+  const isDescending = isDown || cfg.mode === 'descente';
+  const expected = isDescending ? state.running - card.value : state.running + card.value;
   const entered  = parseInt(state.currentInput, 10);
   const isOk     = entered === expected;
   state.sessionQuestions.push({ correct: isOk, timeout: false, timeMs: Date.now() - (state.cardStartTime ?? Date.now()) });
@@ -530,7 +532,7 @@ function validateAnswer() {
     setTimeout(() => { clearFeedback(); nextCard(); }, 600);
   } else {
     state.wrong++;
-    state.errors.push({ card, entered, expected, isDown });
+    state.errors.push({ card, entered, expected, isDown: isDescending });
     state.running = expected;
     addMiniCard(card);
     showFeedback(false);
@@ -595,9 +597,10 @@ function timeOut() {
   const isDown   = state.phase === 'down';
   const deck     = isDown ? state.deckDown : state.deck;
   const card     = deck[state.cardIndex];
-  const expected = isDown ? state.running - card.value : state.running + card.value;
+  const isDescending = isDown || cfg.mode === 'descente';
+  const expected = isDescending ? state.running - card.value : state.running + card.value;
   state.wrong++;
-  state.errors.push({ card, entered:'⏱', expected, isDown });
+  state.errors.push({ card, entered:'⏱', expected, isDown: isDescending });
   state.running = expected;
   addMiniCard(card);
   showFeedback(false, '⏱');
