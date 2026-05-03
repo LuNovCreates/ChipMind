@@ -13,6 +13,9 @@ export async function init() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').then(reg => {
+        /* Vérifie une mise à jour toutes les 10 minutes si l'app reste ouverte */
+        setInterval(() => reg.update(), 10 * 60 * 1000);
+
         reg.addEventListener('updatefound', () => {
           const newSW = reg.installing;
           newSW.addEventListener('statechange', () => {

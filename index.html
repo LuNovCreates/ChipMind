@@ -720,7 +720,7 @@ function renderModules() {
     const modProg    = progress[mod.id] || {};
     const comingSoon = !!mod.comingSoon;
     const locked     = !comingSoon && !modProg.unlocked;
-    const stars      = comingSoon ? 0 : (modProg.stars || 0);
+    const stars      = comingSoon ? 0 : (modProg.starsPerLevel?.[settings.level] || 0);
     const prog       = comingSoon ? 0 : window.ChipMindStorage.getModuleBarPct(mod.id, settings.level);
     const card       = document.createElement('div');
     card.className   = 'module-card' + (mod.wide ? ' wide' : '') + (comingSoon ? ' coming-soon' : locked ? ' locked' : ' active-mod');
@@ -1180,7 +1180,7 @@ window._bottomBar = {
     _nav.innerHTML = `
       <div class="nav-end-game">
         <button class="nav-action-btn" id="navReplayBtn">↻ Relancer</button>
-        <button class="nav-action-btn-secondary" id="navDashBtn">← Dashboard</button>
+        <button class="nav-action-btn-secondary" id="navDashBtn">← Lobby</button>
       </div>`;
     document.getElementById('navReplayBtn').onclick = replayFn;
     document.getElementById('navDashBtn').onclick   = dashFn;

@@ -55,7 +55,7 @@ self.addEventListener('install', event => {
       /* addAll en bloc — si un asset manque, on log sans planter */
       return Promise.allSettled(
         CACHE_ASSETS.map(url =>
-          cache.add(url).catch(err =>
+          cache.add(new Request(url, { cache: 'reload' })).catch(err =>
             console.warn(`[SW] Non mis en cache : ${url}`, err)
           )
         )
