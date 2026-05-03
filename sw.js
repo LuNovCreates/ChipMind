@@ -4,7 +4,7 @@
    ⚠️  Incrémenter CACHE_NAME à chaque déploiement significatif
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'chipmind-v25';
+const CACHE_NAME = 'chipmind-v26';
 
 const CACHE_ASSETS = [
   '/',
