@@ -16,8 +16,8 @@ const SCHOOL_TABLES = [2, 3, 4, 5, 6, 7, 8, 9].map(n => ({
 }));
 
 const CASINO_TABLES = [
-  { key: 'casino_5',   n: 5,  rowStart: 1,  rowEnd: 20, alsoSchool: true,  label: '× 5',        sublabel: '1 → 20 (1–10 en école)' },
-  { key: 'casino_8',   n: 8,  rowStart: 1,  rowEnd: 20, alsoSchool: true,  label: '× 8',        sublabel: '1 → 20 (1–10 en école)' },
+  { key: 'casino_5',   n: 5,  rowStart: 11, rowEnd: 20, alsoSchool: true,  label: '× 5',        sublabel: '11 → 20' },
+  { key: 'casino_8',   n: 8,  rowStart: 11, rowEnd: 20, alsoSchool: true,  label: '× 8',        sublabel: '11 → 20' },
   { key: 'casino_11a', n: 11, rowStart: 1,  rowEnd: 10, alsoSchool: false, label: '× 11',       sublabel: '1 → 10' },
   { key: 'casino_11b', n: 11, rowStart: 11, rowEnd: 20, alsoSchool: false, label: '× 11',       sublabel: '11 → 20' },
   { key: 'casino_17a', n: 17, rowStart: 1,  rowEnd: 10, alsoSchool: false, label: '× 17',       sublabel: '1 → 10' },
